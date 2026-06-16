@@ -509,9 +509,13 @@ A scattering of small, deliberate choices:
 - **`aria-label` on every icon button.** Play/pause swaps its label
   with its state so screen readers announce the current action.
 - **`<span class="sr-only" aria-live="polite">`** announces the
-  current word for AT users who have muted the TTS voice. The
-  `sr-only` pattern (absolute, 1px box, clipped) keeps content in
-  the accessibility tree where `display: none` would remove it.
+  current word *only when the audio narration isn't the voice* —
+  i.e. when playback is paused, muted, or volume is zero
+  (`playback.audible` is false). When the recording is actively
+  audible, the span emits an empty string so the screen reader
+  doesn't echo what the user is already hearing. The `sr-only`
+  pattern (absolute, 1px box, clipped) keeps content in the
+  accessibility tree where `display: none` would remove it.
 
 ### ISO 8601 durations in `<time datetime="…">`
 
