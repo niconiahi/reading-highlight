@@ -224,7 +224,9 @@ The two techniques you'd reach for instead:
 ### Coordinates and the BLEED
 
 `getClientRects()` returns viewport-relative rectangles. The home
-page reads `passage_el.getBoundingClientRect()` as the origin and
+page keeps the passage's bounding rect in `passage_rect` state
+(see §3 *Re-measure on reflow*), exposes it as a `$derived`
+`origin = { x: passage_rect.left, y: passage_rect.top }`, and
 subtracts it from every rect so the SVG draws in local coordinates.
 A small `PAD_X = 3` / `PAD_Y = 2` is added so the painted rect is
 slightly larger than the glyph box (matches the visual intuition of
@@ -237,19 +239,33 @@ the passage aren't clipped, and the SVG's CSS positions it with
 
 Costs you take on with `getClientRects`: you must re-measure on
 resize, on font load, on any content change. The home page wires a
-single `ResizeObserver` on the passage wrapper:
+single `ResizeObserver` on the passage wrapper and stores the
+result as state:
 
 ```ts
-const observer = new ResizeObserver(() => resize_tick++);
+let passage_rect = $state({ left: 0, top: 0, width: 0, height: 0 });
+
+const observer = new ResizeObserver(() => {
+  if (!passage_el) return;
+  const r = passage_el.getBoundingClientRect();
+  passage_rect = { left: r.left, top: r.top, width: r.width, height: r.height };
+});
 observer.observe(passage_el);
 ```
 
-`resize_tick` is a reactive counter; bumping it invalidates the
-`$effect` that recomputes the rects. `ResizeObserver` fires on
-internal layout shifts (font load, content change, ancestor width
-change), not just viewport resize, which is exactly what we need.
-You'd pair with a `resize` listener only if you care about viewport
-shifts that don't affect the observed element (rare).
+Every consumer reads `passage_rect` as a real value:
+`overlay_w`/`overlay_h` and `origin` are `$derived` from it, and
+`rects_hover`/`rects_active`/`rects_word` are `$derived.by` that
+call `get_local_line_rects(tn, …, origin)`. When the observer
+writes new dimensions, those derivations re-run automatically —
+no "tick" counter, no manual invalidation. The dependency graph
+is the data flow.
+
+`ResizeObserver` fires on internal layout shifts (font load,
+content change, ancestor width change), not just viewport resize,
+which is exactly what we need. You'd pair with a `resize`
+listener only if you care about viewport shifts that don't affect
+the observed element (rare).
 
 ### Accessibility
 
@@ -598,7 +614,8 @@ span?"**
 > layer. And you must re-measure on resize, font load, and
 > content change — a single `ResizeObserver` on the passage
 > wrapper catches all three (it fires on internal layout shifts,
-> not just viewport changes).
+> not just viewport changes). Write the new rect into `$state`
+> and let `$derived` consumers re-run. No manual invalidation.
 
 ### Click and hit-testing
 
