@@ -583,17 +583,37 @@ edge fires an event: `route.mounted`, `load.fetched`,
 `media_session.action`, `passage.sentence_seek`,
 `bfcache.restore`.
 
-Two window-level error listeners catch the things that escape:
+Two window-level error listeners catch the things that escape try/catch:
 
 ```ts
+const on_err = (e: ErrorEvent) => {
+  logger.event('error.unhandled', { message: e.message, src: e.filename });
+};
+const on_rej = (e: PromiseRejectionEvent) => {
+  logger.event('error.unhandled', { message: String(e.reason) });
+};
 window.addEventListener('error', on_err);
 window.addEventListener('unhandledrejection', on_rej);
 ```
 
-Both feed the same `error.unhandled` event. The teardown removes
-them, alongside the rAF cancel, the media session unhook, and the
-keyboard unhook — the entire effect is symmetric, which is how you
-avoid leaks across navigations in an SPA.
+`error` fires for synchronous throws that escape; `unhandledrejection`
+fires for Promises that reject with no `.catch`. They're two
+separate browser events for historical reasons, and you need both —
+listening to only one drops half your crashes. Each handler just
+reads a couple of fields off the event object and forwards them to
+`logger.event` under the same `error.unhandled` name, so your
+telemetry has one error stream instead of two. The handlers
+themselves are pure observability: they don't recover, they don't
+show UI, they don't swallow anything (the error still surfaces in
+the devtools console). They exist so a crash on a user's device
+becomes a row in your logs rather than dying silently.
+
+The teardown removes both listeners, alongside the rAF cancel, the
+media session unhook, and the keyboard unhook — the entire effect
+is symmetric, which is how you avoid leaks across navigations in
+an SPA. `removeEventListener` needs the same function reference you
+passed to `addEventListener`, which is why `on_err` / `on_rej` are
+stored in named `const`s rather than inlined as arrow expressions.
 
 `session_summary` runs on teardown and reports `max_position`,
 `seek_count`, and a `completed` fraction — the minimum useful
