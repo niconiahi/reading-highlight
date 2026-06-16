@@ -73,13 +73,20 @@ const sent_rects = rects_for(s.start, s.end)
 
 ## 6. SVG overlay — rects → `<rect>`
 
+`DOMRect` coords from §5 are viewport-relative. The SVG overlay's origin is the passage's top-left, so we subtract the passage's own viewport offset to translate into local space.
+
 ```svelte
+<script>
+  const { x: ox, y: oy } = passage_el.getBoundingClientRect()   // passage origin in viewport
+</script>
+
 <svg aria-hidden="true" style="pointer-events:none">
   {#each sent_rects as r}<rect x={r.x - ox} y={r.y - oy} width={r.width} height={r.height} rx="4" />{/each}
   {#each word_rects as r}<rect x={r.x - ox} y={r.y - oy} width={r.width} height={r.height} rx="4" />{/each}
 </svg>
 ```
-`ox, oy` come from `passage_el.getBoundingClientRect()`.
+
+`r` is each `DOMRect` from §5's arrays. `ox, oy` come from `passage_el` (§0).
 
 ## 7. `ResizeObserver` — re-measure trigger
 
