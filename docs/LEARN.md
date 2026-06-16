@@ -366,12 +366,6 @@ controls playback:
 - `play` / `pause` — proxy to the audio element.
 - `seekforward` / `seekbackward` — ±10s, the same delta as the
   keyboard arrows.
-- `previoustrack` / `nexttrack` — **rebound to sentence stepping**.
-  This is the interesting one. For a reader, the natural "previous
-  track" intuition isn't "back ten seconds," it's "the previous
-  sentence." The handler finds the current sentence via
-  `find_sentence_index_by_word(word_index)` and seeks to
-  sentence ±1's first word.
 
 [`MediaMetadata`](https://developer.mozilla.org/docs/Web/API/MediaMetadata) is set with the title and artist so the lock screen
 shows "Abou Ben Adhem — Leigh Hunt" instead of the URL.
@@ -805,11 +799,13 @@ loop doesn't crash — it just highlights the wrong word, which
 looks like a sync bug. The semantics have to match the linear
 version exactly, or the upgrade isn't local anymore.
 
-#### "How would you implement click-to-seek?"
-First decision I'd make: sentence granularity, not word. A single
-word is too small a touch target — you'd miss-tap constantly.
-Sentences are big, finger-friendly, and they match how people
-think about "where I want to be" in prose.
+#### "Say a user taps somewhere in the middle of the text. How do you jump the audio to that spot?"
+That pattern has a name in media UI — *click-to-seek* — but the
+interesting question is the one you just asked, so I'll answer
+that one. First decision I'd make: sentence granularity, not
+word. A single word is too small a touch target — you'd miss-tap
+constantly. Sentences are big, finger-friendly, and they match
+how people think about "where I want to be" in prose.
 
 Then it's [`document.caretPositionFromPoint(x, y)`](https://developer.mozilla.org/docs/Web/API/Document/caretPositionFromPoint) — you give it
 screen coordinates, it hands back the text node and character
@@ -848,11 +844,11 @@ The browser doesn't care about word boundaries —
 offset. A click in a gap returns whichever character offset is
 closest, typically the start of the next word.
 
-From there, `find_sentence_index_by_offset` walks the sentence
-spans and answers "which span contains this offset, or — if
-we're in a gap — the previous one." That fallback is the point:
-clicks on whitespace shouldn't fall off the end. Then I seek to
-that sentence's first word.
+From there, `find_sentence_index_by_offset` walks the stored
+sentence iterable and answers "which sentence contains this
+offset, or — if we're in a gap — the previous one." That fallback is the point: clicks
+on whitespace shouldn't fall off the end. Then I seek to that
+sentence's first word.
 
 The check I always remember to do: confirm the hit node is
 actually the passage's text node. Clicks on the overlay,
@@ -860,18 +856,13 @@ scrollbar, or padding shouldn't trigger a seek.
 
 #### "What about lock-screen / hardware media keys?"
 I'd reach for the [Media Session API](https://developer.mozilla.org/docs/Web/API/Media_Session_API). You register handlers on
-`navigator.mediaSession` for play, pause, seek-forward,
-seek-backward, previous-track, next-track. The OS then surfaces
-those in its native control — lock screen, notification,
-Bluetooth headset, smartwatch — and routes the user's button
-presses back to your handlers.
-
-The interesting bit is "previous track" and "next track." For a
-podcast those mean "previous episode." For a reader, the
-intuition is "previous sentence." So I'd rebind them to sentence
-stepping instead of episode skipping. [`MediaMetadata`](https://developer.mozilla.org/docs/Web/API/MediaMetadata) would set
-the label on the lock screen; [`setPositionState`](https://developer.mozilla.org/docs/Web/API/MediaSession/setPositionState) would keep the
-OS's scrub bar in sync with where playback actually is.
+`navigator.mediaSession` for play, pause, seek-forward, and
+seek-backward. The OS then surfaces those in its native
+control — lock screen, notification, Bluetooth headset,
+smartwatch — and routes the user's button presses back to your
+handlers. [`MediaMetadata`](https://developer.mozilla.org/docs/Web/API/MediaMetadata) sets the label on the lock screen;
+[`setPositionState`](https://developer.mozilla.org/docs/Web/API/MediaSession/setPositionState) keeps the OS's scrub bar in sync with where
+playback actually is.
 
 Happy to go into [`setPositionState` specifically — its support story and why it needs a `try/catch`](#whats-setpositionstate-and-why-the-trycatch).
 
@@ -897,15 +888,6 @@ Support: this method shipped after the rest of the API. Chrome
 `typeof ms.setPositionState !== 'function'` guard — otherwise
 older browsers that have Media Session but lack this method hit
 a `TypeError`.
-
-##### "Why rebind `previoustrack` to previous sentence?"
-Hardware media keys map to "previous track" by convention,
-but in a reader the unit the user thinks in is the sentence,
-not the track. ±10s is what the seek keys are for. Mapping
-prev/next track to sentence ±1 turns a single Bluetooth
-headset button into a native "step through the prose"
-control — the kind of integration that's invisible until
-someone hands you headphones with one button.
 
 ##### "What if `mediaSession` is unavailable?"
 I'd return a no-op controller from `attach_media_session`. The
