@@ -4,6 +4,15 @@ Same APIs as `LEARN.md`, but only code. Each step adds one API and uses every pr
 
 ---
 
+## 0. DOM handles
+
+```ts
+const passage_el = document.querySelector('blockquote')!   // the prose container
+const text_node  = passage_el.firstChild as Text           // the single text node inside it
+```
+
+`passage_el` is the box used by `ResizeObserver` and the click/hover targets. `text_node` is the `Range` anchor for §5 and the equality check in §8.
+
 ## 1. The data contract
 
 ```ts
@@ -76,7 +85,8 @@ const sent_rects = rects_for(s.start, s.end)
 
 ```ts
 let resize_tick = 0
-new ResizeObserver(() => resize_tick++).observe(passage_el)
+const observer = new ResizeObserver(() => resize_tick++)
+observer.observe(passage_el)
 // §5 rects_for(...) is recomputed in an $effect that reads resize_tick
 ```
 
@@ -84,17 +94,16 @@ new ResizeObserver(() => resize_tick++).observe(passage_el)
 
 ```ts
 function hit(e: PointerEvent): number | null {
-  const p = document.caretPositionFromPoint?.(e.clientX, e.clientY)
-         ?? document.caretRangeFromPoint?.(e.clientX, e.clientY)
-  const node   = p && ('offsetNode' in p ? p.offsetNode    : p.startContainer)
-  const offset = p && ('offset'     in p ? p.offset        : p.startOffset)
-  return node === text_node ? offset : null
+  const p = document.caretPositionFromPoint(e.clientX, e.clientY)
+  return p?.offsetNode === text_node ? p.offset : null
 }
 ```
 
 ## 9. click + hover — compose §8 → §4 → §2
 
 ```ts
+let hover_sentence = 0                                        // feeds §5/§6 hover layer
+
 passage_el.onclick = e => {
   const c = hit(e); if (c == null) return                     // §8
   const si = find_sentence_index_by_offset(c)                 // §4
@@ -102,22 +111,23 @@ passage_el.onclick = e => {
 }
 passage_el.onmousemove = e => {
   const c = hit(e); if (c == null) return
-  hover_sentence = find_sentence_index_by_offset(c)           // feeds §5/§6 hover layer
+  hover_sentence = find_sentence_index_by_offset(c)
 }
 ```
 
 ## 10. keyboard — write to §2
 
 ```ts
-addEventListener('keydown', e => {
+const on_key = (e: KeyboardEvent) => {
   if (e.target instanceof HTMLInputElement) return
   if (e.code === 'Space')      { audio.paused ? audio.play() : audio.pause(); e.preventDefault() }
   if (e.code === 'ArrowLeft')  { audio.currentTime -= 10;  e.preventDefault() }
   if (e.code === 'ArrowRight') { audio.currentTime += 10;  e.preventDefault() }
-})
+}
+addEventListener('keydown', on_key)
 ```
 
-## 11. Media Session — OS transport → §2 + §4
+## 11. Media Session — OS transport → §2
 
 ```ts
 navigator.mediaSession.metadata = new MediaMetadata({ title: 'Abou Ben Adhem', artist: 'Leigh Hunt' })
@@ -125,14 +135,6 @@ navigator.mediaSession.setActionHandler('play',         () => audio.play())
 navigator.mediaSession.setActionHandler('pause',        () => audio.pause())
 navigator.mediaSession.setActionHandler('seekforward',  () => audio.currentTime += 10)
 navigator.mediaSession.setActionHandler('seekbackward', () => audio.currentTime -= 10)
-navigator.mediaSession.setActionHandler('previoustrack', () => {
-  const si = find_sentence_index_by_word(word_index)          // ← §4 over §3
-  audio.currentTime = data.words[data.sentences[si - 1].first_word_index].start
-})
-navigator.mediaSession.setActionHandler('nexttrack', () => {
-  const si = find_sentence_index_by_word(word_index)
-  audio.currentTime = data.words[data.sentences[si + 1].first_word_index].start
-})
 ```
 
 ## 12. `localStorage` — persist §2 state, restore on mount
@@ -145,9 +147,10 @@ try {                                                          // restore
   if (s) { audio.currentTime = s.t; audio.playbackRate = s.rate }
 } catch {}
 
-addEventListener('pagehide', () => {                          // persist (not every tick!)
+const on_hide = () => {                                       // persist (not every tick!)
   try { localStorage.setItem(KEY, JSON.stringify({ t: audio.currentTime, rate: audio.playbackRate })) } catch {}
-})
+}
+addEventListener('pagehide', on_hide)
 ```
 
 ## 13. Service worker + bfcache
@@ -163,7 +166,7 @@ addEventListener('pageshow', e => { if (e.persisted) log('bfcache.restore') })
 cancelAnimationFrame(raf)                       // §3
 observer.disconnect()                           // §7
 removeEventListener('keydown', on_key)          // §10
-for (const a of ['play','pause','seekforward','seekbackward','previoustrack','nexttrack'] as const)
+for (const a of ['play','pause','seekforward','seekbackward'] as const)
   navigator.mediaSession.setActionHandler(a, null)              // §11
 removeEventListener('pagehide', on_hide)        // §12
 ```
