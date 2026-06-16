@@ -54,10 +54,12 @@
     });
     observer.observe(passage_el);
 
-    const on_err = (e: ErrorEvent) =>
+    const on_err = (e: ErrorEvent) => {
       logger.event('error.unhandled', { message: e.message, src: e.filename });
-    const on_rej = (e: PromiseRejectionEvent) =>
+    };
+    const on_rej = (e: PromiseRejectionEvent) => {
       logger.event('error.unhandled', { message: String(e.reason) });
+    };
     window.addEventListener('error', on_err);
     window.addEventListener('unhandledrejection', on_rej);
 
