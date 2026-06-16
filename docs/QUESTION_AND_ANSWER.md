@@ -6,22 +6,79 @@ official prep PDF, and the candidate's own grounding in `LEARN.md` /
 
 ---
 
+## 0. Glossary you'll see throughout
+
+Quick reference. Each term is also defined inline the first time it
+appears in the body.
+
+- **bfcache** — Back/Forward cache. The browser keeps a whole page in
+  memory when you navigate away, so back/forward restores it instantly
+  instead of reloading. `pageshow` with `event.persisted === true`
+  signals a bfcache restore.
+- **CLS** — Cumulative Layout Shift. Core Web Vital that measures
+  unexpected layout movement (an image loads, things jump down).
+- **CSS Custom Highlight API** — Browser API that lets you paint
+  highlights via CSS pseudo-elements over `Range` objects without
+  wrapping text in `<span>`s.
+- **DOM** — Document Object Model. The live tree of nodes the browser
+  builds from HTML. Everything you do with `document.querySelector`,
+  `element.children`, etc., walks this tree.
+- **DOMParser** — Built-in API (`new DOMParser().parseFromString(str, "text/xml")`)
+  that turns a string into a DOM tree. Interviews ban it to force you
+  to write the tokenizer + tree builder yourself.
+- **DSA** — Data Structures and Algorithms. The classic interview
+  category: arrays, hashes, trees, graphs, binary search, etc.
+- **JD** — Job Description. The official posting for the role.
+- **LCP** — Largest Contentful Paint. Core Web Vital that measures
+  how long until the biggest above-the-fold element renders.
+- **LRU** — Least Recently Used. A fixed-size key/value store that
+  evicts whichever key was accessed longest ago when full.
+- **MV3 / Manifest V3** — Current Chrome extension manifest format.
+  Replaces persistent background pages with a sleeping **service worker**.
+- **rAF** — `requestAnimationFrame`. Browser-scheduled callback that
+  fires once per repaint (~60 Hz). Use for anything driven by visual state.
+- **Range** — Built-in browser object representing a start/end position
+  inside text nodes. `getClientRects()` returns the pixel boxes of that
+  span — the foundation of overlay-style highlighting.
+- **Reflow** — The browser recomputing layout (positions and sizes of
+  every box) after a DOM/style change. Expensive. Triggered by reading
+  layout-affecting properties (`offsetTop`, `getBoundingClientRect`).
+- **SSML** — Speech Synthesis Markup Language. An XML dialect that
+  wraps text with tags like `<speak>`, `<s>` (sentence), `<break time="500ms"/>`
+  to control how a TTS engine reads it.
+- **STAR** — Behavioral-interview answer format: Situation, Task,
+  Action, Result. One paragraph per part.
+- **SW** — Service Worker. A background script the browser keeps alive
+  separately from the page, intercepting network requests. Mandatory
+  for PWAs; the backbone of Chrome MV3 extensions.
+- **TTL** — Time To Live. An entry expires after N milliseconds even
+  if it's still within capacity. Stacked with LRU for "two eviction
+  policies, capacity + age."
+- **TTS** — Text To Speech. Turning written text into spoken audio,
+  Speechify's core product.
+
+---
+
 ## 1. Role recap
 
-- Team owns **app.speechify.com** and the **Chrome Extension** TTS reader.
-  Extension reads **billions of words/month** on arbitrary pages.
+- Team owns **app.speechify.com** and the **Chrome Extension**
+  **TTS** (Text-To-Speech) reader. Extension reads **billions of words/month**
+  on arbitrary pages.
 - The signature hard problem: **detect the readable section** of an
   arbitrary web page (news article vs banking dashboard vs SaaS app).
-- Stack signal from the JD: deep **React** + deep **core Web APIs**
-  (DOM, Range, Selection, Observers, events, parsing).
+- Stack signal from the **JD** (Job Description): deep **React** +
+  deep **core Web APIs** — `DOM` (the live tree of nodes the browser
+  builds from HTML), `Range` (start/end positions inside text nodes),
+  `Selection` (what the user has highlighted), Observers
+  (`Mutation`/`Resize`/`IntersectionObserver`), events, parsing.
 - Loop, per the PDF:
   1. **Web AI Assessment, 90 min** — fill missing functionality in an
      existing repo. AI allowed in some passes (recent reviews) and
      banned in others (older). Assume banned and prep accordingly.
   2. **Live DOM Web APIs, 60 min** — live-code in the browser console.
      Multiple problems, speed matters. Plus leadership questions.
-  3. **Coding & Problem Solving, 60 min** — DSA + web parsing +
-     Frontend/Browser API foundations.
+  3. **Coding & Problem Solving, 60 min** — **DSA** (Data Structures
+     and Algorithms) + web parsing + Frontend/Browser API foundations.
 - 15–30 min closer with CEO **Cliff Weitzman**.
 
 ---
@@ -30,6 +87,23 @@ official prep PDF, and the candidate's own grounding in `LEARN.md` /
 
 Reviews kept as web/frontend-relevant: **30**. Discarded as backend /
 NestJS / Swift / cloud / process-only complaints / no signal: **26**.
+
+Recurring acronyms below:
+- **SSML** — Speech Synthesis Markup Language, an XML dialect with
+  tags like `<speak>`, `<s>`, `<break time="500ms"/>` that tells a TTS
+  engine how to read text. Speechify pipes SSML to its voice models.
+- **DOMParser** — built-in browser API (`new DOMParser().parseFromString(str, "text/xml")`)
+  that turns a string into a DOM tree. Interviews ban it to force you
+  to write the tokenizer + tree builder yourself.
+- **LRU cache** — Least Recently Used: a fixed-size key/value store
+  that evicts whichever key was accessed longest ago when full.
+- **TTL** — Time To Live: each entry also expires after N ms, even if
+  it was just inserted. Two eviction policies stacked: capacity + age.
+- **Playwright** — Node-based browser-automation library for end-to-end
+  tests; drives Chromium/Firefox/WebKit from one API.
+- **Protobuf** — Protocol Buffers, Google's binary serialization
+  format. Compact, schema-defined messages used over the wire instead
+  of JSON.
 
 | Pattern | Hits | Likely round |
 |---|---|---|
@@ -121,11 +195,17 @@ demonstrate how you'd memoize a fetcher or stream parser around it.
 
 The most-repeated single question in the dataset. Three concrete asks:
 **string → node tree**, **node tree → string**, **decode to plain text**.
+You write a **recursive-descent parser** by hand: a small state
+machine with an index `i` walking the input, plus a stack tracking
+which element you're currently inside.
 
 SSML is a subset of XML — for the take-home, support `<speak>`, `<p>`,
 `<s>` (sentence), `<break>`, `<prosody>`, `<say-as>`. Tag names may
 contain `-`. Attributes are double-quoted. Self-closing tags exist
-(`<break time="500ms" />`).
+(`<break time="500ms" />`). **Entities** are escapes like `&amp;`,
+`&lt;`, `&gt;`, `&quot;`, `&apos;` that stand in for reserved
+characters; **CDATA** (`<![CDATA[…]]>`) is an XML literal-text block
+the parser must pass through verbatim.
 
 ```ts
 export type SsmlNode =
@@ -348,6 +428,12 @@ paragraph from an element."** Those are extension-team problems.
 Explicit ask in the reviews. The candidate already knows the trick
 from §3 of `LEARN_BY_CODE.md` — `Range.getClientRects()`.
 
+**Range** — built-in browser object representing a `{startContainer,
+startOffset, endContainer, endOffset}` span inside the DOM.
+**`getClientRects()`** returns one `DOMRect` per line box that span
+covers, in viewport pixel coordinates. That's what lets you draw a
+highlight without wrapping the text in `<span>`s.
+
 ```ts
 function first_line_height(el: HTMLElement): number {
   const text = el.firstChild;
@@ -362,7 +448,9 @@ function first_line_height(el: HTMLElement): number {
 
 Probes:
 - "What if there's a nested `<strong>` in the paragraph?" — walk to the
-  first text node via a `TreeWalker`, not `firstChild`.
+  first text node via a **`TreeWalker`** (built-in DOM iterator that
+  yields every node matching a `NodeFilter`, depth-first), not
+  `firstChild`.
 - "What about line-height vs the rect height?" — `getClientRects` gives
   you the **line box** the glyphs sit in. That is what you want for
   highlighting. `getComputedStyle(el).lineHeight` gives you the CSS,
@@ -373,8 +461,10 @@ Probes:
 
 ### 4.2 "Find top-level readable nodes by parsing HTML"
 
-This is Mozilla Readability-lite. The extension has to do this on
-every page. Live-code the heuristic.
+This is **Mozilla Readability**-lite — Readability is the open-source
+algorithm Firefox's Reader View uses to score every element on a page
+and pick the "main article" container. The extension has to do this
+on every page. Live-code the heuristic.
 
 ```ts
 function find_readable_roots(root: HTMLElement = document.body): HTMLElement[] {
@@ -419,20 +509,30 @@ Probes:
   Prose has commas and length; nav and chrome don't.
 - "Why link density?" — separates "list of links" (nav, related
   articles) from "prose with the occasional link" (article body).
-- "How would you handle SPAs that mutate after load?" — `MutationObserver`
-  on `document.body` with a debounced re-run. Tie into §4.4.
+- "How would you handle SPAs that mutate after load?" — **SPA**
+  (Single-Page App) means the page rewrites itself client-side
+  instead of full-page-reloading. Use **`MutationObserver`** (a
+  built-in DOM API that fires a callback whenever child nodes,
+  attributes, or text data change under a target) on `document.body`
+  with a debounced re-run. Tie into §4.4.
 - "Banking app vs news article?" — banking has short labels, button
   text, no commas, dense links. Heuristic naturally rejects them.
   Add a cap on `display: none` / `visibility: hidden` ancestors.
-- "Shadow DOM?" — `TreeWalker` doesn't cross shadow roots. You'd
-  recurse into `el.shadowRoot` when present; many design systems use
-  closed shadow roots and you can't.
+- "Shadow DOM?" — **Shadow DOM** is a subtree of nodes attached to a
+  host element that is isolated from the main document tree (styles
+  don't leak in or out, `querySelector` from outside can't see in).
+  `TreeWalker` doesn't cross shadow roots. You'd recurse into
+  `el.shadowRoot` when present; many design systems use **closed**
+  shadow roots (`mode: "closed"` hides `shadowRoot` from outside JS)
+  and you can't reach in.
 
 ### 4.3 Click-to-read on an arbitrary page
 
 The extension's actual UX. Candidate has this in §4 of
-`LEARN_BY_CODE.md` (`caretPositionFromPoint` + sentence hit-test).
-For the extension version:
+`LEARN_BY_CODE.md` (**`caretPositionFromPoint`** — browser API that
+maps a pixel coordinate, e.g. a mouse click, back to a `{offsetNode,
+offset}` pair inside the DOM text — plus sentence hit-test). For the
+extension version:
 
 ```ts
 document.addEventListener("click", (e) => {
@@ -476,9 +576,13 @@ Probes:
 
 ### 4.5 Visibility-based prefetch / lazy work
 
-`IntersectionObserver` for "is this sentence on screen, prefetch its
-audio." Candidate already knows the API shape via `ResizeObserver`
-in §3 of `LEARN_BY_CODE.md`.
+**`IntersectionObserver`** (browser API that fires a callback when a
+target element enters or leaves a configurable viewport region; built
+for lazy-loading and viewport tracking without scroll listeners) for
+"is this sentence on screen, prefetch its audio." Candidate already
+knows the API shape via **`ResizeObserver`** (analogous API that fires
+when an element's box dimensions change, including from internal
+layout shifts, not just window resize) in §3 of `LEARN_BY_CODE.md`.
 
 ```ts
 const io = new IntersectionObserver((entries) => {
@@ -497,8 +601,11 @@ for (const s of document.querySelectorAll<HTMLElement>("[data-sentence-id]")) {
 
 ### 4.6 Selection API for "play this paragraph"
 
-Already named as a follow-up in §4 of `LEARN.md`. Recap of the live
-sequence:
+**Selection API** — `document.getSelection()` returns a `Selection`
+object representing whatever the user has highlighted with cursor or
+touch. It exposes one or more `Range` objects covering the highlighted
+text. Already named as a follow-up in §4 of `LEARN.md`. Recap of the
+live sequence:
 
 ```ts
 const sel = document.getSelection();
@@ -520,17 +627,25 @@ Probes:
 
 The JD names it as DSA + Frontend foundations. Drill these:
 
-- **Binary search variants** — "largest index `i` such that `arr[i] ≤ t`",
-  which is exactly what the candidate already knows from the audio sync
-  loop in §2 of `LEARN.md`. Same template solves "find first sentence
-  whose start ≥ scroll Y", "find first cache entry not yet expired."
-- **Sliding window** — readability scoring, debounced telemetry,
-  rate-limited TTS requests.
-- **Trie / autocomplete** — one reviewer reports "design search
+- **Binary search variants** — classic O(log n) lookup in a sorted
+  array: halve the search range each step by comparing the midpoint
+  with the target. The variant here is "largest index `i` such that
+  `arr[i] ≤ t`", which is exactly what the candidate already knows
+  from the audio sync loop in §2 of `LEARN.md`. Same template solves
+  "find first sentence whose start ≥ scroll Y", "find first cache
+  entry not yet expired."
+- **Sliding window** — algorithm pattern where two pointers (`lo`,
+  `hi`) walk over a sequence maintaining a running aggregate
+  (count/sum/max). Used here for readability scoring, debounced
+  telemetry, rate-limited TTS requests.
+- **Trie / autocomplete** — a **trie** is a tree where each edge is
+  one character and each path from root spells a stored string;
+  perfect for prefix lookup. One reviewer reports "design search
   autocomplete system." Hash-trie keyed on prefix, with TTL'd
   cache (tie back to 3.1) for ranked results.
-- **Job queue** — one reviewer. Concurrency-limited promise queue.
-  Worth memorizing:
+- **Job queue** — a **concurrency-limited promise queue** runs at
+  most N async tasks at a time and parks the rest until a slot frees
+  up. One reviewer. Worth memorizing:
 
 ```ts
 function pqueue<T>(limit: number) {
@@ -547,10 +662,18 @@ function pqueue<T>(limit: number) {
 }
 ```
 
-- **Event-loop / microtasks** — likely probe. `queueMicrotask` vs
-  `setTimeout(0)` vs `requestAnimationFrame`. Candidate already lives
-  this distinction in §2 of `LEARN.md`.
-- **Debounce / throttle** — write both from scratch. They're trivial,
+- **Event-loop / microtasks** — JS runs one **task** at a time (a
+  macrotask: a `setTimeout` callback, an event handler, etc.).
+  Between tasks the engine drains the **microtask** queue
+  (`Promise.then`, `queueMicrotask`) to completion, then paints
+  (firing `rAF` callbacks just before paint). Likely probe.
+  `queueMicrotask` vs `setTimeout(0)` vs `requestAnimationFrame`.
+  Candidate already lives this distinction in §2 of `LEARN.md`.
+- **Debounce / throttle** — both rate-limit a function. **Debounce**
+  waits until `ms` have elapsed since the *last* call before firing
+  (good for "fire after the user stops typing"). **Throttle** fires
+  at most once per `ms` window regardless of call rate (good for
+  scroll/resize handlers). Write both from scratch. They're trivial,
   but interviewers want to see leading vs trailing edge correctness.
 
 ---
@@ -559,17 +682,26 @@ function pqueue<T>(limit: number) {
 
 Reviews don't probe the manifest; the JD does. Be ready for any of:
 
-- **Manifest v3.** Background is a **service worker**, not a persistent
-  page. It sleeps. Event-driven. Use `chrome.storage.local` for any
-  state that must survive the worker dying.
-- **Content scripts vs background.** Content script runs in the page's
-  DOM but in an **isolated world** — same DOM, separate JS heap from
-  the page's scripts. Can't see page globals; the page can't see your
-  variables. Communication: `chrome.runtime.sendMessage` to background,
-  `window.postMessage` + page-world script for talking to page JS.
+- **Manifest v3 (MV3).** The current Chrome extension manifest
+  version, mandatory for new submissions. Background code runs as a
+  **service worker** (SW) — a background script the browser keeps
+  alive separately from the page, intercepting network requests for
+  offline support and caching. In extensions the SW replaces the old
+  persistent background page: it sleeps when idle and wakes on
+  events. Use `chrome.storage.local` for any state that must survive
+  the worker dying.
+- **Content scripts vs background.** A **content script** is JS that
+  the extension injects into matching pages and that runs *with* the
+  page's DOM. It runs in an **isolated world** — same DOM, separate
+  JS heap from the page's scripts. Can't see page globals; the page
+  can't see your variables. Communication:
+  `chrome.runtime.sendMessage` to background, `window.postMessage`
+  + page-world script for talking to page JS.
 - **Injecting UI** without breaking the host page: prefer **Shadow DOM**
-  to isolate styles. Build the reader UI inside a `host.attachShadow({ mode: "closed" })`
-  and inline styles inside. Otherwise host-page CSS will eat your layout.
+  (subtree attached to a host element, isolated from outer styles)
+  to isolate styles. Build the reader UI inside a
+  `host.attachShadow({ mode: "closed" })` and inline styles inside.
+  Otherwise host-page CSS will eat your layout.
 - **Selection API on arbitrary pages** — `document.getSelection()`
   works fine from a content script. Works inside the host page's DOM,
   not inside your shadow-rooted UI (separate selection contexts).
@@ -744,9 +876,11 @@ function readable(root: HTMLElement = document.body): HTMLElement[] {
 ```
 
 ### Q5. "Sync a highlight with audio playback."
-Candidate's §2 of `LEARN.md`. `<audio>` + `rAF` + `findLastIndex` with
-`start ≤ t` semantics. Not `timeupdate`. Bias early 60–100 ms for
-output latency. Binary search past 1k words.
+Candidate's §2 of `LEARN.md`. `<audio>` + `rAF` (`requestAnimationFrame`,
+once-per-paint callback) + `findLastIndex` with `start ≤ t` semantics.
+Not `timeupdate` (the `<audio>` element's built-in event fires only
+~4 times per second, too coarse for word-level highlighting). Bias
+early 60–100 ms for output latency. Binary search past 1k words.
 
 ```ts
 const audio = document.querySelector("audio")!;
@@ -783,9 +917,13 @@ document.addEventListener("click", (e) => {
 
 ### Q7. "Highlight without wrapping the text in spans."
 Candidate's §3 of `LEARN.md`. `Range.getClientRects()` into an
-`aria-hidden` SVG overlay with `<rect rx ry>`. Single text node, prose
-intact for reader-mode, AT, and Select-All. CSS Custom Highlight API
-is the alternative when flat rects suffice.
+`aria-hidden` SVG overlay with `<rect rx ry>` (rounded-corner SVG
+rectangles painted over the text). Single text node, prose intact
+for reader-mode, **AT** (Assistive Technology — screen readers,
+braille displays, switch controls), and Select-All. The **CSS
+Custom Highlight API** (`CSS.highlights` + `::highlight(name)`
+pseudo-element styling a `Range`) is the alternative when flat
+rects suffice.
 
 ```ts
 function paintHighlight(text: Text, start: number, end: number, svg: SVGSVGElement) {
@@ -807,9 +945,13 @@ function paintHighlight(text: Text, start: number, end: number, svg: SVGSVGEleme
 
 ### Q8. "Layout shifts — viewport, font load, reflow. How do you keep
 the overlay correct?"
-Candidate's §3 of `LEARN.md`. `ResizeObserver` on the passage wrapper,
-write the rect into reactive state, derived consumers recompute
-naturally. Fires on internal layout shifts too, not just viewport.
+**Reflow** is the browser recomputing positions and sizes of every
+affected box after a DOM/style change (expensive — triggered by
+inserting nodes, changing dimensions, or reading layout-affecting
+properties like `offsetTop` in the same frame as a write). Candidate's
+§3 of `LEARN.md`. `ResizeObserver` on the passage wrapper, write the
+rect into reactive state, derived consumers recompute naturally.
+Fires on internal layout shifts too, not just viewport.
 
 ```ts
 const ro = new ResizeObserver((entries) => {
@@ -835,11 +977,14 @@ mo.observe(document.body, { childList: true, subtree: true });
 ```
 
 ### Q10. "OS-level media controls."
-Candidate's §6 of `LEARN.md`. `navigator.mediaSession.setActionHandler`
-for play/pause/seek. `MediaMetadata` for the lock-screen label.
-`setPositionState` on `play`/`pause`/`seeked`/`ratechange`/`loadedmetadata`,
-wrapped in `try/catch` because Chromium throws on `NaN` duration.
-Feature-detect; graceful no-op when absent.
+**MediaSession API** — `navigator.mediaSession` tells the OS what's
+playing so the lock screen, keyboard media keys, Bluetooth headsets,
+and AirPods can control your `<audio>`. Candidate's §6 of `LEARN.md`.
+`setActionHandler` for play/pause/seek. `MediaMetadata` for the
+lock-screen label. `setPositionState` on
+`play`/`pause`/`seeked`/`ratechange`/`loadedmetadata`, wrapped in
+`try/catch` because Chromium throws on `NaN` duration. Feature-detect;
+graceful no-op when absent.
 
 ```ts
 const ms = navigator.mediaSession;
@@ -856,10 +1001,14 @@ if (ms) {
 ```
 
 ### Q11. "Where do you persist the reader state?"
-Candidate's §7 of `LEARN.md`. `localStorage`, written on `pagehide`
-(not `beforeunload`), read on mount inside the playback `$effect`,
-wrapped in `try/catch`. IndexedDB only when blobs or structured app
-state earn it.
+Candidate's §7 of `LEARN.md`. **`localStorage`** — synchronous
+origin-scoped key/value store (~5 MB, strings only) — written on
+`pagehide` (the modern "page is going away" event; preferred over
+`beforeunload` because the latter blocks bfcache), read on mount
+inside the playback `$effect` (Svelte reactive effect), wrapped in
+`try/catch`. **IndexedDB** (async transactional database in the
+browser, good for blobs and structured data) only when blobs or
+structured app state earn it.
 
 ```ts
 const KEY = "reader:state";
@@ -872,9 +1021,12 @@ if (saved?.src === audio.src) audio.currentTime = saved.t;
 ```
 
 ### Q12. "Back/forward cache."
-Candidate's §7 of `LEARN.md`. `pageshow` with `event.persisted` tells
-you. State is already alive; the hook exists for "re-validate this
-token" cases the reader doesn't have yet.
+**bfcache** — Back/Forward cache: the browser keeps the whole page in
+memory when you navigate away so back/forward is instant.
+`pageshow` with `event.persisted === true` means a bfcache restore,
+not a fresh load. Candidate's §7 of `LEARN.md`. State is already
+alive; the hook exists for "re-validate this token" cases the reader
+doesn't have yet.
 
 ```ts
 addEventListener("pageshow", (e) => {
@@ -897,9 +1049,11 @@ Probe: trailing-edge vs leading-edge. The above is trailing. Leading:
 fire immediately if `t === null`, then debounce subsequent calls.
 
 ### Q14. "Binary search the active word."
-Candidate's §2 of `LEARN.md`. "Largest index `i` such that
-`words[i].start ≤ t`." `lo`/`hi`, midpoint check, `lo - 1` at the end.
-Same template the candidate already memorized.
+Candidate's §2 of `LEARN.md`. Binary search is the O(log n) lookup in
+a sorted array — halve the range at each step. The variant here is
+"largest index `i` such that `words[i].start ≤ t`." `lo`/`hi`,
+midpoint check, `lo - 1` at the end. Same template the candidate
+already memorized.
 
 ```ts
 function lastIndexLE(words: { start: number }[], t: number): number {
@@ -936,8 +1090,10 @@ await Promise.all(urls.map((u) => run(() => fetch(u))));
 Trie keyed on prefix; each node stores top-K results (small heap or
 sorted array). Client-side LRU+TTL cache (Q2!) keyed on the query
 string. Debounce input (Q13). On the server, prefix-search over a
-ranked index. Discuss cancellation: `AbortController` on the fetch
-when a new keystroke supersedes.
+ranked index. Discuss cancellation: **`AbortController`** — built-in
+API whose `.signal` you pass into `fetch`; calling `.abort()` cancels
+the in-flight request — fire on each new keystroke so the older
+request supersedes.
 
 ```ts
 type Node = { kids: Map<string, Node>; top: string[] };
@@ -998,11 +1154,13 @@ chrome.runtime.onMessage.addListener((m, _s, send) => {
 ```
 
 ### Q19. "Microtasks vs `setTimeout(0)` vs `rAF`?"
-Microtasks drain before the next task, before paint, before `setTimeout`
-callbacks. `setTimeout(0)` is a macrotask, clamped to ≥4ms after
-nesting, runs in the next task. `rAF` runs before the next paint,
-once per frame. Use microtasks for "after this promise but before any
-UI work"; `rAF` for anything that mutates layout/paint.
+**Microtask** queue (`Promise.then`, `queueMicrotask`) drains to
+completion between every macrotask, before paint, before `setTimeout`
+callbacks. `setTimeout(0)` is a **macrotask**, clamped to ≥4 ms after
+nesting, runs in the next task. **`rAF`** (`requestAnimationFrame`)
+runs once per frame just before the next paint. Use microtasks for
+"after this promise but before any UI work"; `rAF` for anything that
+mutates layout/paint.
 
 ```ts
 console.log("sync");
@@ -1014,11 +1172,13 @@ Promise.resolve().then(() => console.log("then")); // 2': also micro
 ```
 
 ### Q20. "Event delegation."
-Single listener on a common ancestor, inspect `event.target` and walk
-up with `closest()` to a known selector. Trade-off: fewer listeners,
-no need to (un)bind as children mount; cost is one extra walk per
-event and the gotcha that `event.target` may be a descendant of the
-element you actually want.
+**Event delegation** — instead of attaching one handler per child,
+you put a single listener on a common ancestor, inspect `event.target`,
+and walk up with `closest()` to a known selector. It exploits event
+bubbling (events fire on the target, then on each ancestor up to
+`document`). Trade-off: fewer listeners, no need to (un)bind as
+children mount; cost is one extra walk per event and the gotcha that
+`event.target` may be a descendant of the element you actually want.
 
 ```ts
 document.getElementById("list")!.addEventListener("click", (e) => {
@@ -1033,7 +1193,10 @@ document.getElementById("list")!.addEventListener("click", (e) => {
 ## 9. Leadership / behavioral prompts
 
 The PDF says "recent experiences, no philosophy." Prep five-minute
-STAR answers for each:
+**STAR** answers for each — STAR stands for **Situation, Task,
+Action, Result**: one paragraph framing the context, one for what
+you specifically had to do, one for what you did, one for the
+outcome (with numbers when possible).
 
 - An incident you owned end-to-end. The detection signal, the
   mitigation, the postmortem action item that actually shipped.
