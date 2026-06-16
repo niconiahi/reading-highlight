@@ -513,6 +513,49 @@ A scattering of small, deliberate choices:
   `sr-only` pattern (absolute, 1px box, clipped) keeps content in
   the accessibility tree where `display: none` would remove it.
 
+### ISO 8601 durations in `<time datetime="…">`
+
+`<time>` is the HTML element for "this text is a time value." Its
+optional `datetime` attribute is the *machine-readable* version of
+that value — what screen readers, search engines, and other tools
+parse — while the element's text content is the *human-readable*
+version. The two are decoupled on purpose: `"1:23"` is what a
+sighted user wants to see; `"PT1M23S"` is what a parser needs to
+know it means "one minute and twenty-three seconds."
+
+The format in `datetime` is **ISO 8601 duration syntax**, the same
+standard used by APIs, calendars, and databases worldwide. The
+letters aren't arbitrary:
+
+- `P` — **P**eriod. Every duration starts with this. It's the
+  marker that says "what follows is a length of time," not a
+  point in time.
+- `T` — **T**ime. Separates the date portion (years, months,
+  days) from the time portion (hours, minutes, seconds). For
+  audio you only need the time portion, so durations look like
+  `PT…`. (A full duration could be `P1DT2H30M` — 1 day, 2 hours,
+  30 minutes.)
+- `H` / `M` / `S` — hours, minutes, seconds. Each preceded by its
+  number. Zero-valued units are omitted: `PT45S` for 45 seconds
+  flat, `PT1H` for one hour, `PT0S` for the initial "0:00".
+
+So `<time datetime="PT1M23S">1:23</time>` means:
+"the text 1:23 represents a duration of 1 minute, 23 seconds."
+
+**Why bother?** A few concrete payoffs:
+
+- **Screen readers** can announce "one minute twenty-three
+  seconds" instead of literally reading "one colon two three".
+- **Search engines** parse `<time datetime>` into structured
+  metadata; a podcast directory or rich result can know the episode
+  is `PT12M` long without scraping text.
+- **Copy/paste & calendar integrations** can recognise the value
+  and offer "add to calendar" / "set timer" actions.
+- **Locale-independence**: `1:23` could be a clock time in some
+  locales; `PT1M23S` is unambiguous everywhere.
+
+The cost is one attribute. Worth it.
+
 ### Reduced motion
 
 There is no JS animation on the home page right now (the highlight
