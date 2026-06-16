@@ -376,14 +376,37 @@ controls playback:
 
 `MediaMetadata` is set with the title and artist so the lock screen
 shows "Abou Ben Adhem — Leigh Hunt" instead of the URL.
-`setPositionState` is called on `play`, `pause`, `seeked`,
-`ratechange`, and `loadedmetadata` so the scrub bar in the OS
-control stays in sync; it's wrapped in `try/catch` because some
-duration/position combos during load are rejected by Chromium.
 
-Graceful fallback: if `navigator.mediaSession` is unavailable (older
-Safari, SSR), the function returns a no-op controller and the rest
-of the page is unaffected.
+### `setPositionState`
+
+`navigator.mediaSession.setPositionState({ duration, playbackRate,
+position })` tells the OS where playback currently is. Without it,
+the system control knows *whether* audio is playing but not
+*where* — the scrub bar sits frozen, the "skip 10s" preview shows
+nothing useful, and AirPlay receivers can't render an accurate
+timeline.
+
+The page calls it on five audio events: `play`, `pause`, `seeked`,
+`ratechange`, `loadedmetadata`. That covers every moment the OS's
+view of the position could diverge from reality. It is wrapped in
+`try/catch` because Chromium throws if the duration is `NaN` or
+the position falls outside `[0, duration]` — both common during
+the brief window before metadata loads.
+
+There is also a `typeof ms.setPositionState !== 'function'` guard
+because the method shipped after the rest of the API.
+
+**Support.** The Media Session API itself is in Chrome 73+,
+Edge 79+, Firefox 82+, and Safari 15+ (desktop and iOS).
+`setPositionState` specifically is in Chrome 81+, Edge 81+,
+Firefox 109+, and Safari 15.4+. Anything older falls into the
+graceful no-op path below. Mobile Safari and Chrome on Android
+are where this matters most in practice — that's where the lock
+screen and Bluetooth controls are surfacing the data.
+
+Graceful fallback: if `navigator.mediaSession` is unavailable
+(SSR, very old browsers), the function returns a no-op controller
+and the rest of the page is unaffected.
 
 ---
 
