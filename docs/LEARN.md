@@ -396,7 +396,9 @@ the brief window before metadata loads.
 There is also a `typeof ms.setPositionState !== 'function'` guard
 because the method shipped after the rest of the API.
 
-**Support.** The Media Session API itself is in Chrome 73+,
+##### Support
+
+The Media Session API itself is in Chrome 73+,
 Edge 79+, Firefox 82+, and Safari 15+ (desktop and iOS).
 `setPositionState` specifically is in Chrome 81+, Edge 81+,
 Firefox 109+, and Safari 15.4+. Anything older falls into the
@@ -450,7 +452,9 @@ is registration and graceful failure.
 
 ### bfcache
 
-**What it is.** "bfcache" is short for *back/forward cache*. When
+##### What it is
+
+"bfcache" is short for *back/forward cache*. When
 you navigate away from a page and then press the browser's Back
 (or Forward) button, modern browsers don't reload the previous
 page from scratch — they keep a *snapshot* of it in memory,
@@ -460,13 +464,17 @@ where you left it. The page didn't reload; it was paused and
 resumed. This is why hitting Back on a YouTube video can drop you
 straight back into playback at the same second.
 
-**Why it matters here.** Because the snapshot is live, the
+##### Why it matters here
+
+Because the snapshot is live, the
 reader's audio, highlight position, and reactive `$state` survive
 a Back/Forward round trip with zero work on our part. That's the
 ideal — *no code needed* to restore state, because state was
 never lost.
 
-**How you detect it.** The browser fires a `pageshow` event every
+##### How you detect it
+
+The browser fires a `pageshow` event every
 time the page becomes visible — both on a normal load *and* on a
 bfcache restore. To tell which one it is, you read the event's
 `persisted` flag: `true` means "this page came back from the
@@ -478,7 +486,9 @@ window.addEventListener('pageshow', (e) => {
 });
 ```
 
-**What the code does with that.** Just logs it. The point isn't
+##### What the code does with that
+
+Just logs it. The point isn't
 the log itself — it's the hook. If you ever need to do work
 *only* on a bfcache restore (re-validate a token, re-open a
 WebSocket, refresh a timestamp), this is the event that fires.
@@ -546,7 +556,9 @@ letters aren't arbitrary:
 So `<time datetime="PT1M23S">1:23</time>` means:
 "the text 1:23 represents a duration of 1 minute, 23 seconds."
 
-**Why bother?** A few concrete payoffs:
+##### Why bother?
+
+A few concrete payoffs:
 
 - **Screen readers** can announce "one minute twenty-three
   seconds" instead of literally reading "one colon two three".
@@ -625,7 +637,7 @@ shape for "did the user actually engage with this document."
 
 ### The core five
 
-**"How would you implement the highlight?"**
+#### "How would you implement the highlight?"
 The constraint I started from: the prose has to stay a single
 text node — reader mode, screen readers, and Select-All all need
 it intact. So wrapping each word in a `<span>` is off the table.
@@ -639,7 +651,7 @@ touched.
 Happy to dig into the SVG-vs-divs choice, how I re-measure on
 reflow, or why I skipped the CSS Custom Highlight API.
 
-**"How do you keep the highlight in sync with audio?"**
+#### "How do you keep the highlight in sync with audio?"
 The naive instinct is to listen for `timeupdate` on the audio
 element. But it fires maybe four times a second — well below the
 rate of normal speech, so the highlight visibly trails the voice.
@@ -655,7 +667,7 @@ properties — I can go into why that's the right comparison rather
 than `start ≤ t < end`, or talk about how this scales for longer
 documents.
 
-**"How would you implement click-to-seek?"**
+#### "How would you implement click-to-seek?"
 First decision: sentence granularity, not word. A single word is
 too small a touch target — you'd miss-tap constantly. Sentences
 are big, finger-friendly, and they match how people think about
@@ -672,7 +684,7 @@ don't have to touch the highlight myself.
 Can go deeper on the caret API itself, or how I handle clicks
 that land between two words.
 
-**"What about lock-screen / hardware media keys?"**
+#### "What about lock-screen / hardware media keys?"
 The Media Session API. You register handlers on
 `navigator.mediaSession` for play, pause, seek-forward,
 seek-backward, previous-track, next-track. The OS then surfaces
@@ -690,7 +702,7 @@ scrub bar in sync with where playback actually is.
 Happy to go into `setPositionState` specifically — its support
 story and why it needs a `try/catch`.
 
-**"How do you handle accessibility?"**
+#### "How do you handle accessibility?"
 The big realisation: the audio narration *is* the accessibility
 story for the prose. A screen-reader user can hear the
 recording — so I don't want the screen reader to ALSO announce
@@ -710,14 +722,14 @@ through any of those, or the `sr-only` pattern specifically.
 
 ### Sync and timing
 
-**"Why not `timeupdate`?"**
+#### "Why not `timeupdate`?"
 Spec gives no minimum firing rate. Browsers ship ~4×/sec
 (Chrome, Firefox) to ~15×/sec (Safari). Below the word rate of
 normal speech, so the highlight visibly trails. `rAF` matches
 the display refresh, pauses in background tabs, and aligns with
 the compositor.
 
-**"Why `findLastIndex`, not a forward pointer?"**
+#### "Why `findLastIndex`, not a forward pointer?"
 A forward pointer is faster per-frame but breaks on scrubs.
 Every seek (drag, click-to-seek, keyboard skip) forces you to
 reset and re-walk. `findLastIndex` is correct under arbitrary
@@ -725,7 +737,7 @@ seeking. The win on the pointer is illusory; you're optimising
 the wrong axis. For very long documents, swap the linear scan
 for binary search — same semantics, `O(log n)`.
 
-**"Why `start ≤ t` and not `start ≤ t < end`?"**
+#### "Why `start ≤ t` and not `start ≤ t < end`?"
 Speech has silences between words — punctuation pauses, breath
 pauses, sentence ends. `start ≤ t < end` makes the highlight
 blink off during every silence. `start ≤ t` (the largest such
@@ -734,7 +746,7 @@ wants. Bonus: a short word can't be skipped by a frame landing
 in a 5 ms gap, because the search resolves to the most recent
 start.
 
-**"The highlight feels a bit late. What do you do?"**
+#### "The highlight feels a bit late. What do you do?"
 Subtract a constant offset (60–100 ms) from `t` before the
 search to compensate for audio output latency. Bias *early* —
 leading the voice by a frame reads as in-sync; trailing reads
@@ -743,8 +755,7 @@ your timing source is wrong; fix the data, not the highlight.
 
 ### Highlight rendering
 
-**"Why `Range.getClientRects` instead of wrapping every word in a
-span?"**
+#### "Why `Range.getClientRects` instead of wrapping every word in a span?"
 The instinct is to wrap each word: `<span>Abou</span> <span>Ben</span>
 <span>Adhem</span>…`. It works for highlighting, but it destroys
 the prose. A 200-word paragraph becomes 200+ empty spans —
@@ -757,14 +768,14 @@ DOM at all. The text stays a single
 `<blockquote>The text…</blockquote>`, and the highlight lives in
 a sibling `aria-hidden` SVG layer the prose doesn't know about.
 
-**"Why SVG over absolute-positioned `<div>`s?"**
+#### "Why SVG over absolute-positioned `<div>`s?"
 One SVG node with many `<rect>` children composites more cleanly
 than N positioned divs, and `rx`/`ry` give per-corner rounding
 without per-element CSS. The semantics are identical — both are
 a sibling layer behind the prose — but the SVG is a smaller,
 denser representation.
 
-**"Why not the CSS Custom Highlight API?"**
+#### "Why not the CSS Custom Highlight API?"
 Flat rectangles only. The API restricts you to `color`,
 `background-color`, `text-decoration` and friends, `text-shadow`,
 and `-webkit-text-stroke-*`. No `border-radius`, no padding, no
@@ -773,7 +784,7 @@ the API. If the design were flat color (search hits, current
 line), the Highlight API would be the right call — zero DOM
 nodes is the cleanest possible story.
 
-**"`Range.getClientRects()` — what's the gotcha?"**
+#### "`Range.getClientRects()` — what's the gotcha?"
 Two gotchas, both about coordinates and freshness.
 
 First, the coordinates are viewport-relative. If your overlay
@@ -793,7 +804,7 @@ invalidation, no tick counters.
 
 ### Click and hit-testing
 
-**"User clicked between two words. What happens?"**
+#### "User clicked between two words. What happens?"
 The browser doesn't care about word boundaries —
 `caretPositionFromPoint` just hands back the nearest text
 offset. A click in a gap returns whichever character offset is
@@ -811,7 +822,7 @@ scrollbar, or padding shouldn't trigger a seek.
 
 ### Persistence
 
-**"When do you write `localStorage`?"**
+#### "When do you write `localStorage`?"
 On `pagehide`, not every tick. `localStorage` is synchronous
 and blocks the main thread; writing on every frame tanks the
 sync loop. `pagehide` is the right event because it fires on
@@ -819,7 +830,7 @@ tab close, navigation, *and* bfcache entry — `beforeunload`
 doesn't fire reliably on mobile Safari. Wrapped in
 `try/catch` so disabled storage doesn't break the page.
 
-**"Why not IndexedDB?"**
+#### "Why not IndexedDB?"
 Two strings — position and rate — don't justify it.
 `localStorage` is the right tool for small synchronous
 key-value state. IndexedDB earns its complexity for blobs
@@ -829,7 +840,7 @@ needs neither.
 
 ### Media Session
 
-**"Why rebind previoustrack to previous sentence?"**
+#### "Why rebind previoustrack to previous sentence?"
 Hardware media keys map to "previous track" by convention,
 but in a reader the unit the user thinks in is the sentence,
 not the track. ±10s is what the seek keys are for. Mapping
@@ -838,7 +849,7 @@ headset button into a native "step through the prose"
 control — the kind of integration that's invisible until
 someone hands you headphones with one button.
 
-**"What if `mediaSession` is unavailable?"**
+#### "What if `mediaSession` is unavailable?"
 Return a no-op controller from `attach_media_session`. The
 rest of the page is unaffected; the OS-level integration
 just isn't there. Graceful degradation, no feature
@@ -846,7 +857,7 @@ detection at the call site.
 
 ### Accessibility
 
-**"Why is there an `aria-live` announcing the current word?"**
+#### "Why is there an `aria-live` announcing the current word?"
 Because the audio recording is the primary accessibility story,
 but only when the user is actually hearing it. If they've
 paused, muted, or dropped the volume to zero, the screen reader
@@ -859,14 +870,14 @@ playing at volume, the region emits an empty string and stays
 silent. When the audio isn't audible, it emits the current
 word. One voice at a time — never both.
 
-**"`display: none` vs the visually-hidden pattern?"**
+#### "`display: none` vs the visually-hidden pattern?"
 `display: none` and `visibility: hidden` remove from the
 accessibility tree. The clipped/1px-box `sr-only` pattern
 keeps content in the AT tree while hiding it visually. Use
 the latter for screen-reader-only labels, live regions,
 off-screen heading structure.
 
-**"Why no `tabindex` on the passage?"**
+#### "Why no `tabindex` on the passage?"
 The hover/click decoration on prose is a *visual affordance
 for mouse users*. Adding `tabindex` puts a keyboard tab stop
 on the paragraph with nothing to do once focused. Keyboard
@@ -877,7 +888,7 @@ styling does the work.
 
 ### System framing
 
-**"Walk me through the architecture from server to highlight."**
+#### "Walk me through the architecture from server to highlight."
 Bottom up. The server returns a JSON document: the prose plus
 precomputed timings — where each word starts in the audio,
 where each sentence begins and ends. The page loads that on
@@ -903,7 +914,7 @@ the next mount.
 
 Can zoom into any of those layers.
 
-**"If you had to ship in two days, what do you cut?"**
+#### "If you had to ship in two days, what do you cut?"
 The keepers are the things that make it feel like the demo: an
 `<audio>` element with `preservesPitch`, the rAF +
 `findLastIndex` sync loop, the `getClientRects`-into-SVG
@@ -919,8 +930,7 @@ Honestly, though — Media Session is maybe two hours of work and
 it's the thing reviewers notice. If "two days" means "ship
 Friday," I'd probably put it back in the keep set.
 
-**"If you had a month, what's the highest-leverage thing you'd
-add?"**
+#### "If you had a month, what's the highest-leverage thing you'd add?"
 Virtualization for long documents — a window of ±N sentences
 rendered, recycled as the highlight advances — because it
 unblocks novels and textbooks, the categories where the
