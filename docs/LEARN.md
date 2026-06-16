@@ -890,10 +890,22 @@ older browsers that have Media Session but lack this method hit
 a `TypeError`.
 
 ##### "What if `mediaSession` is unavailable?"
-I'd return a no-op controller from `attach_media_session`. The
-rest of the page would be unaffected; the OS-level integration
-just wouldn't be there. Graceful degradation, no feature
-detection at the call site.
+Then the page just doesn't get OS-level transport, and that's
+fine — the OS-level transport was never the primary surface to
+begin with. The user still has the on-screen controls, the
+keyboard shortcuts, and the audio element doing its job. Lock
+screens and headset buttons are a layer of polish on top of a
+reader that works without them, not something the reading
+experience depends on.
+
+The principle I'd lean on: feature-detect once, at the seam
+where the integration gets attached, and skip the whole thing
+cleanly when the API isn't there. Nothing downstream should know
+the difference. The same pattern applies one layer deeper for
+"`mediaSession` exists but `setPositionState` doesn't" — older
+Safari, the case from the previous answer — and that's a sign
+the pattern is the right shape, not that I'm patching around a
+specific browser.
 
 #### "How would you handle accessibility?"
 The big realisation I'd lead with: the audio narration *is* the
