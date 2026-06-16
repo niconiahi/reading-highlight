@@ -908,22 +908,25 @@ the pattern is the right shape, not that I'm patching around a
 specific browser.
 
 #### "How would you handle accessibility?"
-The big realisation I'd lead with: the audio narration *is* the
-accessibility story for the prose. A screen-reader user can hear
-the recording — so I wouldn't want the screen reader to ALSO
-announce every word. That's a duplicate voice.
+I'd start from the audio narration, because it *is* the
+accessibility story for the prose. A screen-reader user can
+already hear the recording, so I don't want the screen reader
+announcing every word on top of it — that's two voices fighting
+each other and the page becomes unusable.
 
-Concretely: I'd put `aria-hidden` and `pointer-events: none` on
-the highlight overlay, so assistive tech only sees the underlying
-prose, and clicks land on the text node rather than the SVG. I'd
-add a single [`aria-live`](https://developer.mozilla.org/docs/Web/Accessibility/ARIA/Attributes/aria-live) region that announces the current word,
-gated so it only fires when the audio isn't audible — paused,
-muted, or volume zero. One voice at a time.
+So the highlight overlay gets `aria-hidden` and
+`pointer-events: none`. Assistive tech only sees the underlying
+prose, and clicks land on the text instead of on the SVG. Then
+I'd add one [`aria-live`](https://developer.mozilla.org/docs/Web/Accessibility/ARIA/Attributes/aria-live) region for the current word, but gated
+so it only fires when the audio isn't audible — paused, muted,
+or volume at zero. That way there's always exactly one voice
+narrating, never both.
 
-The rest is just semantic HTML: [`<blockquote cite>`](https://developer.mozilla.org/docs/Web/HTML/Element/blockquote) for the
-passage, [`<time datetime>`](https://developer.mozilla.org/docs/Web/HTML/Element/time) for elapsed time, [`<input type="range">`](https://developer.mozilla.org/docs/Web/HTML/Element/input/range)
-for the scrubber, [`aria-label`](https://developer.mozilla.org/docs/Web/Accessibility/ARIA/Attributes/aria-label) on icon buttons. Happy to walk
-through any of those, or [the `sr-only` pattern specifically](#display-none-vs-the-visually-hidden-pattern).
+Everything else is semantic HTML doing its job:
+[`<blockquote cite>`](https://developer.mozilla.org/docs/Web/HTML/Element/blockquote) for the passage, [`<time datetime>`](https://developer.mozilla.org/docs/Web/HTML/Element/time) for
+elapsed time, [`<input type="range">`](https://developer.mozilla.org/docs/Web/HTML/Element/input/range) for the scrubber,
+[`aria-label`](https://developer.mozilla.org/docs/Web/Accessibility/ARIA/Attributes/aria-label) on the icon buttons. Happy to dig into any of
+those, or into [the `sr-only` pattern specifically](#display-none-vs-the-visually-hidden-pattern).
 
 ##### "Why would you add an `aria-live` announcing the current word?"
 Because the audio recording is the primary accessibility story,
