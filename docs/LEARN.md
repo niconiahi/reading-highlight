@@ -285,35 +285,29 @@ never what the user wanted anyway.
 
 ### Hit-testing text
 
-The browser exposes hit-testing on text nodes through two
-near-equivalent APIs:
-
-- **`document.caretPositionFromPoint(x, y)`** → `{ offsetNode, offset }`.
-  Standard, supported in Firefox and recent Safari/Chrome.
-- **`document.caretRangeFromPoint(x, y)`** → `Range`. Older WebKit /
-  Chromium ancestor.
-
-The page feature-detects with a single expression:
+`document.caretPositionFromPoint(x, y)` returns
+`{ offsetNode, offset }` — the text node and character offset
+under the cursor:
 
 ```ts
-const pos = document.caretPositionFromPoint?.(e.clientX, e.clientY)
-  ?? document.caretRangeFromPoint?.(e.clientX, e.clientY);
+const pos = document.caretPositionFromPoint(e.clientX, e.clientY);
 ```
 
-Then it normalises the two shapes (`offsetNode`/`offset` vs
-`startContainer`/`startOffset`), and — critically — confirms the
-hit node *is* the passage's text node. Otherwise the click hit
-decoration (the overlay, scrollbars, padding), not prose. From the
-character offset, `find_sentence_index_by_offset` returns the
-sentence; `seek_to_word(sentences[i].first_word_index)` does the
-seek.
+The page then confirms the hit node *is* the passage's text node.
+Otherwise the click hit decoration (the overlay, scrollbars,
+padding), not prose. From the character offset,
+`find_sentence_index_by_offset` returns the sentence;
+`seek_to_word(sentences[i].first_word_index)` does the seek.
 
 ### Hover uses the same plumbing
 
-`onmousemove` runs the same hit-test and writes the resulting
-sentence index to `hover_sentence`. The hover overlay layer reads
-that and re-measures. The point: there is one path from "pixel" to
-"sentence index," and click-to-seek and hover both ride it.
+`onmousemove` calls `sentence_at(e)` — the same hit-test as the
+click handler — and assigns the result to `hover_sentence`. That
+state feeds a `$derived` (`rects_hover`) which calls
+`get_local_line_rects` to produce the SVG `<rect>` geometry for
+the hovered sentence. So one function — `sentence_at` — turns a
+pixel into a sentence index, and both click-to-seek and hover
+call it.
 
 ### The `Selection` API is not wired here
 
@@ -512,9 +506,8 @@ shape for "did the user actually engage with this document."
 > ~4×/sec on Chrome.
 
 **"How would you implement click-to-seek?"**
-> `document.caretPositionFromPoint(x, y)` (with `caretRangeFromPoint`
-> as a fallback for older WebKit), confirm the hit node is the
-> passage's text node, turn `(node, offset)` into a character
+> `document.caretPositionFromPoint(x, y)`, confirm the hit node is
+> the passage's text node, turn `(node, offset)` into a character
 > index, look up the sentence with `find_sentence_index_by_offset`,
 > then `audio.currentTime = timings[sentence.first_word_index].start`.
 > The rAF loop does the rest. Sentence granularity over word
@@ -617,13 +610,6 @@ span?"**
 > that sentence's `first_word_index`. Confirm the hit node is
 > the passage's text node before doing anything — clicks on
 > decoration or scrollbars shouldn't seek.
-
-**"Cross-browser caret hit-testing?"**
-> `caretPositionFromPoint` is the standard (Firefox, modern
-> Safari, recent Chrome). `caretRangeFromPoint` is the older
-> WebKit/Chromium spelling — returns a `Range`, you read its
-> `startContainer` and `startOffset`. Feature-detect both, ship
-> both code paths, normalise the result shape.
 
 ### Persistence
 
@@ -736,7 +722,6 @@ add?"**
 - Range.getClientRects — https://developer.mozilla.org/docs/Web/API/Range/getClientRects
 - ResizeObserver — https://developer.mozilla.org/docs/Web/API/ResizeObserver
 - caretPositionFromPoint — https://developer.mozilla.org/docs/Web/API/Document/caretPositionFromPoint
-- caretRangeFromPoint — https://developer.mozilla.org/docs/Web/API/Document/caretRangeFromPoint
 - Media Session API — https://developer.mozilla.org/docs/Web/API/Media_Session_API
 - MediaMetadata — https://developer.mozilla.org/docs/Web/API/MediaMetadata
 - MediaSession.setPositionState — https://developer.mozilla.org/docs/Web/API/MediaSession/setPositionState
