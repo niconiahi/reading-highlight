@@ -450,12 +450,45 @@ is registration and graceful failure.
 
 ### bfcache
 
-`+layout.svelte` listens for `pageshow` with `e.persisted === true`
-and logs a `bfcache.restore` event. The point isn't the log — it's
-knowing that back/forward cache will hand the page back with all
-state intact (audio element, reactive `$state`, DOM), and the only
-thing to do is notice. If something needed to be re-fetched on
-restore, this is the hook.
+**What it is.** "bfcache" is short for *back/forward cache*. When
+you navigate away from a page and then press the browser's Back
+(or Forward) button, modern browsers don't reload the previous
+page from scratch — they keep a *snapshot* of it in memory,
+fully alive, and slot it back in. The audio element, scroll
+position, JavaScript variables, DOM nodes — everything is exactly
+where you left it. The page didn't reload; it was paused and
+resumed. This is why hitting Back on a YouTube video can drop you
+straight back into playback at the same second.
+
+**Why it matters here.** Because the snapshot is live, the
+reader's audio, highlight position, and reactive `$state` survive
+a Back/Forward round trip with zero work on our part. That's the
+ideal — *no code needed* to restore state, because state was
+never lost.
+
+**How you detect it.** The browser fires a `pageshow` event every
+time the page becomes visible — both on a normal load *and* on a
+bfcache restore. To tell which one it is, you read the event's
+`persisted` flag: `true` means "this page came back from the
+bfcache," `false` means "this is a fresh load."
+
+```ts
+window.addEventListener('pageshow', (e) => {
+  if (e.persisted) logger.event('bfcache.restore', { persisted: true });
+});
+```
+
+**What the code does with that.** Just logs it. The point isn't
+the log itself — it's the hook. If you ever need to do work
+*only* on a bfcache restore (re-validate a token, re-open a
+WebSocket, refresh a timestamp), this is the event that fires.
+Today the reader needs none of those, so we record the event for
+telemetry and move on.
+
+(Counterpart: bfcache *entry* fires `pagehide` with
+`event.persisted === true`. That's why `pagehide` — not
+`beforeunload` — is also the right place to write to
+`localStorage`; see §7.)
 
 ---
 
