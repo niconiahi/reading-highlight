@@ -6,59 +6,6 @@ official prep PDF, and the candidate's own grounding in `LEARN.md` /
 
 ---
 
-## 0. Glossary you'll see throughout
-
-Quick reference. Each term is also defined inline the first time it
-appears in the body.
-
-- **bfcache** — Back/Forward cache. The browser keeps a whole page in
-  memory when you navigate away, so back/forward restores it instantly
-  instead of reloading. `pageshow` with `event.persisted === true`
-  signals a bfcache restore.
-- **CLS** — Cumulative Layout Shift. Core Web Vital that measures
-  unexpected layout movement (an image loads, things jump down).
-- **CSS Custom Highlight API** — Browser API that lets you paint
-  highlights via CSS pseudo-elements over `Range` objects without
-  wrapping text in `<span>`s.
-- **DOM** — Document Object Model. The live tree of nodes the browser
-  builds from HTML. Everything you do with `document.querySelector`,
-  `element.children`, etc., walks this tree.
-- **DOMParser** — Built-in API (`new DOMParser().parseFromString(str, "text/xml")`)
-  that turns a string into a DOM tree. Interviews ban it to force you
-  to write the tokenizer + tree builder yourself.
-- **DSA** — Data Structures and Algorithms. The classic interview
-  category: arrays, hashes, trees, graphs, binary search, etc.
-- **JD** — Job Description. The official posting for the role.
-- **LCP** — Largest Contentful Paint. Core Web Vital that measures
-  how long until the biggest above-the-fold element renders.
-- **LRU** — Least Recently Used. A fixed-size key/value store that
-  evicts whichever key was accessed longest ago when full.
-- **MV3 / Manifest V3** — Current Chrome extension manifest format.
-  Replaces persistent background pages with a sleeping **service worker**.
-- **rAF** — `requestAnimationFrame`. Browser-scheduled callback that
-  fires once per repaint (~60 Hz). Use for anything driven by visual state.
-- **Range** — Built-in browser object representing a start/end position
-  inside text nodes. `getClientRects()` returns the pixel boxes of that
-  span — the foundation of overlay-style highlighting.
-- **Reflow** — The browser recomputing layout (positions and sizes of
-  every box) after a DOM/style change. Expensive. Triggered by reading
-  layout-affecting properties (`offsetTop`, `getBoundingClientRect`).
-- **SSML** — Speech Synthesis Markup Language. An XML dialect that
-  wraps text with tags like `<speak>`, `<s>` (sentence), `<break time="500ms"/>`
-  to control how a TTS engine reads it.
-- **STAR** — Behavioral-interview answer format: Situation, Task,
-  Action, Result. One paragraph per part.
-- **SW** — Service Worker. A background script the browser keeps alive
-  separately from the page, intercepting network requests. Mandatory
-  for PWAs; the backbone of Chrome MV3 extensions.
-- **TTL** — Time To Live. An entry expires after N milliseconds even
-  if it's still within capacity. Stacked with LRU for "two eviction
-  policies, capacity + age."
-- **TTS** — Text To Speech. Turning written text into spoken audio,
-  Speechify's core product.
-
----
-
 ## 1. Role recap
 
 - Team owns **app.speechify.com** and the **Chrome Extension**
@@ -88,22 +35,11 @@ appears in the body.
 Reviews kept as web/frontend-relevant: **30**. Discarded as backend /
 NestJS / Swift / cloud / process-only complaints / no signal: **26**.
 
-Recurring acronyms below:
-- **SSML** — Speech Synthesis Markup Language, an XML dialect with
-  tags like `<speak>`, `<s>`, `<break time="500ms"/>` that tells a TTS
-  engine how to read text. Speechify pipes SSML to its voice models.
-- **DOMParser** — built-in browser API (`new DOMParser().parseFromString(str, "text/xml")`)
-  that turns a string into a DOM tree. Interviews ban it to force you
-  to write the tokenizer + tree builder yourself.
-- **LRU cache** — Least Recently Used: a fixed-size key/value store
-  that evicts whichever key was accessed longest ago when full.
-- **TTL** — Time To Live: each entry also expires after N ms, even if
-  it was just inserted. Two eviction policies stacked: capacity + age.
-- **Playwright** — Node-based browser-automation library for end-to-end
-  tests; drives Chromium/Firefox/WebKit from one API.
-- **Protobuf** — Protocol Buffers, Google's binary serialization
-  format. Compact, schema-defined messages used over the wire instead
-  of JSON.
+Recurring acronyms in the table below — full definitions inline
+where each first matters: **SSML** (XML-for-speech, §3.2), **DOMParser**
+(banned string→DOM API, §3.2), **LRU cache** (capacity-evicting K/V,
+§3.1), **TTL** (per-entry expiry, §3.1), **Playwright** (Node browser
+automation), **Protobuf** (Google's binary wire format).
 
 | Pattern | Hits | Likely round |
 |---|---|---|
@@ -128,6 +64,11 @@ The signal is consistent: **a parser and a cache** in the take-home,
 ## 3. The take-home assessment patterns
 
 ### 3.1 LRU cache with TTL
+
+**LRU** (Least Recently Used — fixed-size key/value store that evicts
+whichever key was accessed longest ago when full). **TTL** (Time To
+Live — each entry also expires after N ms, regardless of recency).
+Stacked: two eviction policies, capacity + age.
 
 Multiple reviews say "had tests, just make them pass." Write it from
 muscle memory.
@@ -785,10 +726,14 @@ For each, the answer is one paragraph plus a reference into the
 candidate's own notes. The candidate should expand live, not recite.
 
 ### Q1. "Write an SSML parser without DOMParser."
-See §3.2 above. Recursive-descent tokenizer with a stack. Decode the
-five named entities. Be loose on whitespace inside tags because their
-test fixtures are. Decode-to-text is a separate walk that treats
-`<break>` as space and unwraps everything else.
+**SSML** (Speech Synthesis Markup Language — XML dialect with `<speak>`,
+`<s>`, `<break>` that tells a TTS engine how to read text).
+**DOMParser** (`new DOMParser().parseFromString(str, "text/xml")` — the
+built-in string→DOM API; banned to force you to hand-roll tokenizer +
+tree builder). See §3.2 above. Recursive-descent tokenizer with a
+stack. Decode the five named entities. Be loose on whitespace inside
+tags because their test fixtures are. Decode-to-text is a separate
+walk that treats `<break>` as space and unwraps everything else.
 
 ```ts
 // minimal: tag-or-text scanner, no attrs, for whiteboard speed
@@ -810,7 +755,11 @@ function parse(s: string): N {
 ```
 
 ### Q2. "Implement an LRU cache with TTL."
-See §3.1. `Map` is insertion-ordered; that's the whole structure. `get`
+**LRU** (Least Recently Used — fixed-size key/value store that evicts
+whichever key was accessed longest ago when full). **TTL** (Time To
+Live — each entry also expires after N ms, even if it was just
+inserted; two eviction policies stacked: capacity + age). See §3.1.
+`Map` is insertion-ordered; that's the whole structure. `get`
 delete-then-set to bump recency. `set` evicts oldest after insert when
 over capacity. Inject `now` for tests. Discuss "does set refresh TTL"
 and "what's get-on-expired's return value" up front.
@@ -837,7 +786,9 @@ const lru = <K, V>(cap: number, ttl: number) => {
 ```
 
 ### Q3. "Get the height of the first line of a paragraph."
-See §4.1. `Range` over the first text node, `getClientRects()[0].height`.
+**`Range`** (built-in browser object representing a start/end position
+inside text nodes; `getClientRects()` returns one `DOMRect` per line
+box). See §4.1. `Range` over the first text node, `getClientRects()[0].height`.
 Same trick as `LEARN_BY_CODE.md` §5. Mention that this is the **line
 box** height, not `line-height`, and that the two diverge with
 descenders or `line-height: normal`.
@@ -962,9 +913,11 @@ document.fonts.ready.then(() => repaintOverlay(passageEl)); // late font swap
 ```
 
 ### Q9. "Watch a page for new readable content."
-§4.4 above. `MutationObserver` with `childList: true, subtree: true`,
-debounced. Disconnect/reobserve around your own injections, or filter
-by a data-attribute namespace.
+**`MutationObserver`** (DOM API that fires a callback whenever child
+nodes, attributes, or text data change under a target). §4.4 above.
+`MutationObserver` with `childList: true, subtree: true`, debounced.
+Disconnect/reobserve around your own injections, or filter by a
+data-attribute namespace.
 
 ```ts
 let timer: ReturnType<typeof setTimeout> | null = null;
