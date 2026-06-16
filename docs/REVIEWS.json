@@ -1,0 +1,639 @@
+[
+  {
+    "page": 1,
+    "position": 1,
+    "role": "Software Engineer",
+    "date_text": "3 de jun de 2026",
+    "location": null,
+    "application": "Me postulé en línea. Acudí a una entrevista en Speechify en jul 2025",
+    "interview": "When I applied about a year ago, their process was heavily automated, fast-paced, and AI-assisted development was not allowed. They send you coding challenges, which you have to record and send without any prior screening call.",
+    "questions": [
+      "Write a custom parser (without using DOMParser or built-in DOM libraries) to extract text solely from the (sentence) elements within an SSML string. Ensure it strips away all invalid or unrelated text wrapper data."
+    ]
+  },
+  {
+    "page": 1,
+    "position": 2,
+    "role": "Software Engineer",
+    "date_text": "22 de may de 2026",
+    "location": "Taipei",
+    "application": "Acudí a una entrevista en Speechify (Taipei) en abr 2026",
+    "interview": "The 1st round is online assessment. You book a 90 minutes time slot, and do AI-assisted coding without interviewer. During the assessment, you are given access to a Github project containing a fullstack NodeJS project for a social media platform, including web frontend, api server, unit test, functional test. And you should find issues in the project, and submit fixes. Any AI tools are allowed. You don't have time to look over the whole project, so you must use AI. It uses Protobuf and Playwright, so make sure your environment is prepared for that. Playwright is big in size, and Protobuf doesn't support all platforms.",
+    "questions": ["Find any issues in the project."]
+  },
+  {
+    "page": 1,
+    "position": 3,
+    "role": "Software Engineer",
+    "date_text": "18 de may de 2026",
+    "location": "Onley, VA",
+    "application": "Me postulé en línea. Acudí a una entrevista en Speechify (Onley, VA) en abr 2026",
+    "interview": "Gave just 90 mins to do a entire production level issue fixes and also should document it . And got no reply from them .seems they would have ghosted me.",
+    "questions": ["Issue fixes (5) in a production level code setup ."]
+  },
+  {
+    "page": 1,
+    "position": 4,
+    "role": "Software Engineer",
+    "date_text": "7 de may de 2026",
+    "location": null,
+    "application": "Me postulé a través de un reclutador. Acudí a una entrevista en Speechify en abr 2026",
+    "interview": "The process could be a bit more transparent. Cause it was supposed to be 3 steps, but I guess that the real deal is 5 steps. 1st First step is the screening (Very good interview) 2st First Technical interview, which is coding (Also very interesting) 3rd You speak with HR leaders and later you have another Second Technical part with an engineer (For me this step they could cover the second HR in the screening) 4th Which is the Third technical interview. It's a whiteboard with system design or can be a case study. (I guess that was the final technical interview, which was very good) If you're in the process, they are not transparent, you can expect everything from the technical interviews, so it's kinda hard to prepare. For an example in the 3rd interview I wasn't expecting, it was supposed to give feedback, so I got caught in the undertow. But I managed to pass. The last technical interview, they say that there is a live coding, which is like a BAR. Then you go to the technical interview. I managed to pass the bar, cause I did the case study and also the interviewer said that the bar was enough. Later I asked the Engineer and his answers were similar to mine. Two days after I received the rejection, they didn't provide any feedback, which I think that is bad for a person who went to the final interview after 2 technical interviews and invested 1 month already. I guess that my bar was not enough, and another person went better. (I'll never know) The whole evaluation of the process: If they provide feedback to the candidates who manage to go to the final interview then it would be positive. Process needs more transparency. (negative point) Positive side, people that I interviewed. Final technical the Engineer guided the interview very well. (positive point) Other: The process moves fast, if you're employed you'll be a bit overwhelmed. (neutral) Another point is that they say that they are language agnostic, but it's preferred for you to do in the language which the job was posted, my case was TS. For an example in the second round which was some code analysis I used Python and Java. My honest take, if you're studying for interviews and focusing on, it's pretty manageable to pass and I'm a very standard engineer. The people that I've meet was really good during the process and I liked them and how the company works.",
+    "questions": []
+  },
+  {
+    "page": 1,
+    "position": 5,
+    "role": "Software Engineer",
+    "date_text": "5 de abr de 2026",
+    "location": "Egypt, WV",
+    "application": "Me postulé en línea. Acudí a una entrevista en Speechify (Egypt, WV) en abr 2026",
+    "interview": "I need to solve an online refactor Typescript assessment and push the refactored code to Github within 50 minutes to began the technical interview process and for now i'm still waiting to start the technical interview",
+    "questions": []
+  },
+  {
+    "page": 2,
+    "position": 1,
+    "role": "Software Engineer",
+    "date_text": "18 de mar de 2026",
+    "location": null,
+    "application": "Acudí a una entrevista en Speechify",
+    "interview": "immediately after you apply they send an automated email with the link to the technical challenge. given the time that passed between the application and the email, no one probably looked at the CV, it was all automated. they ask to record the screen and capture the camera video during the challenge. you have only 90 mins to do it.",
+    "questions": ["Implement LRU Cache with TTL and XML parsing."]
+  },
+  {
+    "page": 2,
+    "position": 2,
+    "role": "Software Engineer",
+    "date_text": "11 de feb de 2026",
+    "location": null,
+    "application": "Me postulé en línea. Acudí a una entrevista en Speechify",
+    "interview": "I gave the automated test, the question was pretty straightforward and I thought I did a good job too. But, I was rejected and was not given a feedback on my performance.",
+    "questions": [
+      "I was given a nestjs question where I needed to complete a module, and bare bone codes framework was provided,"
+    ]
+  },
+  {
+    "page": 2,
+    "position": 3,
+    "role": "Software Engineer",
+    "date_text": "11 de dic de 2025",
+    "location": "Asia",
+    "application": "Me postulé en línea. Acudí a una entrevista en Speechify (Asia) en nov 2025",
+    "interview": "Extremely low salary range: $12,000–$24,000 per year for a backend role focused on cloud technologies. Test assignment includes multiple restrictive rules: No use of AI tools or StackOverflow Mandatory one-hour screen recording Requirements for clean code, design patterns, and production-level solutions The expectations and workload for the test task do not match the offered compensation. Overall, the process feels disproportionate: too many demands for too little in return. Summary The company is looking for a backend engineer with cloud experience, high code quality standards, and strong architectural knowledge. However, the compensation offered is far below market levels, while the test assignment is unusually demanding. This mismatch makes the opportunity unattractive.",
+    "questions": []
+  },
+  {
+    "page": 2,
+    "position": 4,
+    "role": "Software Engineer",
+    "date_text": "7 de dic de 2025",
+    "location": null,
+    "application": "Me postulé en línea. Acudí a una entrevista en Speechify",
+    "interview": "Applied online, Ended up with an Assessment - Implementing LRU chace , SSML parser and a helper function to convert SSML node Tree to a Plain Text String and another question which i didnt get a change to get there",
+    "questions": [
+      "It was a proctored online assessment that was nearly impossible to complete within given time frame."
+    ]
+  },
+  {
+    "page": 2,
+    "position": 5,
+    "role": "Software Engineer",
+    "date_text": "17 de nov de 2025",
+    "location": "Boston, MA",
+    "application": "Me postulé en línea. Acudí a una entrevista en Speechify (Boston, MA) en nov 2025",
+    "interview": "I applied through an online platform. Then, a few days later I received an initial online coding assessment that would be proctored. You schedule the time that you want to complete the coding assessment. The allotted time is 50 minutes. After the coding assessment, you would meet with the CEO, and finally have an \"on-site\" technical interview.",
+    "questions": ["The questions were about refactoring Java."]
+  },
+  {
+    "page": 3,
+    "position": 1,
+    "role": "Software Engineer",
+    "date_text": "8 de nov de 2025",
+    "location": null,
+    "application": "Acudí a una entrevista en Speechify",
+    "interview": "Right after I applied they sent me a scheduled timed test where you'd have 60 mins to clone from their repo and submit the solution to a refactor a BE service and LRU cache problem with TTL. Don't do it unless you cheat or actually a leetcode god or you just want to check out how hard the problem is.",
+    "questions": [
+      "Implement LRU Cache with TTL - had tests Refactor this service - there's no test"
+    ]
+  },
+  {
+    "page": 3,
+    "position": 2,
+    "role": "Software Engineer",
+    "date_text": "24 de oct de 2025",
+    "location": "New York, NY",
+    "application": "Acudí a una entrevista en Speechify (New York, NY)",
+    "interview": "Interview process seemed easy enough but they do not give feedback as a policy so it is difficult to gauge. Started with recruiter screen, followed by a 50 minute timed take home assessment. These types of take homes are very open ended and it's hard to understand every requirement",
+    "questions": [
+      "Restructure typescript. Implement using LRU cache but do not implement the cache"
+    ]
+  },
+  {
+    "page": 3,
+    "position": 3,
+    "role": "Software Engineer",
+    "date_text": "22 de oct de 2025",
+    "location": "Vancouver, BC",
+    "application": "Me postulé en línea. Acudí a una entrevista en Speechify (Vancouver, BC) en oct 2025",
+    "interview": "There was no recruiter call. The interview process began with an automated coding challenge, which felt poorly designed. Since no one from the hiring team attends, it costs them nothing to run; even if they're not seriously looking for candidates. The issues weren't about difficulty; I don't mind hard interviews. The problem was fairness and quality. The test environment didn't work properly, and the \"technical support\" link was broken, showing a lack of care. One question asked for an SSML parser. They expected candidates to understand SSML specifications (e.g. only one tag allowed) within the limited time. Yet their own test cases didn't follow valid XML or SSML rules; one test expected the parser to treat `< speech >< p > hello ` (note the blank character between < and the tag names) as correct, though it's invalid XML/SSML. This reflects a larger issue: companies expect exceptional candidates but don't meet basic standards themselves. Automated interviews may be free for them, but is your time free to give? I was told I \"made it to a stage in their recruitment process that few candidates achieve\" and I was given resources to reapply after 60 days. But, thank you; your interview process clearly demonstrated that you're not good at evaluating people's performance, and this isn't a place I'd want to work.",
+    "questions": [
+      "Implement an LRU cache (Python)",
+      "2. Implement an SSML (subset of XML) parser. 3. Implement an SSML decoder (SSML to text)"
+    ]
+  },
+  {
+    "page": 3,
+    "position": 4,
+    "role": "Software Engineer",
+    "date_text": "19 de oct de 2025",
+    "location": "Taipei",
+    "application": "Me postulé en línea. Acudí a una entrevista en Speechify (Taipei) en oct 2025",
+    "interview": "After applying the position, I received an email with the following assessment test online, which is not allowed to use AI or any auto-complete tools, and the video with screen and front camera is required to make sure that",
+    "questions": []
+  },
+  {
+    "page": 3,
+    "position": 5,
+    "role": "Software Engineer",
+    "date_text": "14 de oct de 2025",
+    "location": null,
+    "application": "Me postulé en línea. Acudí a una entrevista en Speechify en oct 2025",
+    "interview": "The code screen they sent me had me clone a repo and then commit my solutions. The questions were very difficult - the same as others have posted. The biggest problem though was that they used a makefile to run their test suite. Well I have a windows computer and that doesn't work with windows. So I wasn't able to run any of the tests. I emailed them after about what had happened and they just said they would make a note of it.",
+    "questions": ["Worst was parsing XML with NO libraries"]
+  },
+  {
+    "page": 4,
+    "position": 1,
+    "role": "Software Engineer",
+    "date_text": "14 de oct de 2025",
+    "location": "New York, NY",
+    "application": "Me postulé en línea. El proceso tomó 1 semana. Acudí a una entrevista en Speechify (New York, NY) en ago 2025",
+    "interview": "They gave a virtual refactoring interview that didn't have any tests. They said not to spend much time on tests, but also said to ensure that the behavior didn't change because it's a refactor. Having working tests is the first step in refactoring. It was nonsense.",
+    "questions": ["Refactor then implement a function"]
+  },
+  {
+    "page": 4,
+    "position": 2,
+    "role": "Software Engineer",
+    "date_text": "9 de oct de 2025",
+    "location": null,
+    "application": "Me postulé a través de otra fuente. Acudí a una entrevista en Speechify",
+    "interview": "TL;DR: Avoid and don't waste any of your precious time with it First round is recruiter screening To be fair, the recruiters are quite professional but that's the all of the good part. And then it is technical interview which has an insane, unrealistic and pointless expectation (see Interview questions for details) Not to mention that this company has no respect to candidate's privacy as they request to record everything (video, audio) during the interview process - God knows what they would do with those data.",
+    "questions": [
+      "As other users had mentioned - 3 hard level problems (LRU and XML parsing and serialization) in merely 90 minutes, and you are prohibited from even basic Google searching"
+    ]
+  },
+  {
+    "page": 4,
+    "position": 3,
+    "role": "Software Developer",
+    "date_text": "28 de sept de 2025",
+    "location": null,
+    "application": "Me postulé en línea. Acudí a una entrevista en Speechify en ago 2025",
+    "interview": "An automated email would send you instructions for a software design assessment involving creating a parser, and some methods involved in text to speech analysis. You got 90 minutes for the assessment and had to also have some familiarity with GitHub in order to complete it.",
+    "questions": ["Create a parser. - implement get/set methods"]
+  },
+  {
+    "page": 4,
+    "position": 4,
+    "role": "Software Engineer",
+    "date_text": "18 de sept de 2025",
+    "location": null,
+    "application": "Acudí a una entrevista en Speechify",
+    "interview": "I applied through their website, then I was sent an automated email that directed me to an automated online assessment that involved implementing LRU cache and a customized subset of XML parsing.",
+    "questions": ["Implement LRU cache and XML parsing"]
+  },
+  {
+    "page": 4,
+    "position": 5,
+    "role": "Software Engineer",
+    "date_text": "15 de sept de 2025",
+    "location": null,
+    "application": "Acudí a una entrevista en Speechify",
+    "interview": "technical interview. You get a repo and solve some tasks. time was 90 mins. you book the interview slot and start any time. camera and a screen recording is needed.",
+    "questions": ["DSA type questions, so review leetcode and cache"]
+  },
+  {
+    "page": 5,
+    "position": 1,
+    "role": "Software Engineer",
+    "date_text": "8 de sept de 2025",
+    "location": "Minneapolis, MN",
+    "application": "Me postulé en línea. Acudí a una entrevista en Speechify (Minneapolis, MN)",
+    "interview": "This was one of those interviews where they asked you to do an impossible task in an impossible amount of time. Honestly, maybe I'm just dumb, but definitely not a big fan of the process.",
+    "questions": ["To do a pre interview test"]
+  },
+  {
+    "page": 5,
+    "position": 2,
+    "role": "Software Engineer",
+    "date_text": "24 de ago de 2025",
+    "location": null,
+    "application": "Me postulé en persona. El proceso tomó 2 semanas. Acudí a una entrevista en Speechify",
+    "interview": "I applied online. The process took 2 weeks. I had an online assessment which required solving 3 problems in 90 minutes - involving topics: SSML and Cache. It required the camera to be on and screen sharing, and external resources like Stack Overflow and external libraries were not allowed.",
+    "questions": [
+      "it required solving 3 problems in 90 minutes - involving topics: SSML and Cache."
+    ]
+  },
+  {
+    "page": 5,
+    "position": 3,
+    "role": "Software Engineer",
+    "date_text": "23 de ago de 2025",
+    "location": null,
+    "application": "Acudí a una entrevista en Speechify",
+    "interview": "Automatic email invitation for technical assessment round with no copilot, no blogs, no stack overflow to reference. Feel like you need to be in their team in order to complete it in 90mins otherwise it is a waste of time.",
+    "questions": []
+  },
+  {
+    "page": 5,
+    "position": 4,
+    "role": "Software Engineer",
+    "date_text": "11 de ago de 2025",
+    "location": null,
+    "application": "Acudí a una entrevista en Speechify",
+    "interview": "First round consist of technical assessment relating to data structure and algorithm, and parsing of SSML text. During the test, both camera and full screen sharing is required to ensure transparency and authenticity.",
+    "questions": ["No initial HR call, only technical assessment."]
+  },
+  {
+    "page": 5,
+    "position": 5,
+    "role": "Software Engineer",
+    "date_text": "8 de ago de 2025",
+    "location": null,
+    "application": "Acudí a una entrevista en Speechify en jul 2025",
+    "interview": "Initial HR communication and screening and a 90 minute coding assignment in React and TypeScript, designed to test problem solving skills in an ambiguous startup like scenario. I was given a GitHub repository with instructions and asked to complete the tasks without using AI coding assistants, external libraries. React/TypeScript fundamentals, custom hooks, and DOM manipulation. The challenge emphasized clear understanding of requirements, writing clean code, tests, and working independently.",
+    "questions": [
+      "90 minute React/TypeScript coding assignment from a provided GitHub repository, following specific rules and without using AI tools or external libraries."
+    ]
+  },
+  {
+    "page": 6,
+    "position": 1,
+    "role": "Software Engineer",
+    "date_text": "6 de ago de 2025",
+    "location": null,
+    "application": "Me postulé en línea. Acudí a una entrevista en Speechify",
+    "interview": "Online testing assessment is giving for you to complete. Requires you to have a GitHub account to access the assessment and schedule. Need to pass all test cases to be eligible for the next step.",
+    "questions": ["They give you an assessment focusing on React hooks"]
+  },
+  {
+    "page": 6,
+    "position": 2,
+    "role": "Software Engineer",
+    "date_text": "29 de jul de 2025",
+    "location": null,
+    "application": "Me postulé en línea. El proceso tomó 3 semanas. Acudí a una entrevista en Speechify en jun 2025",
+    "interview": "I was given an unfinished or unoptimized repo in each round, and I was timed as I worked through different parts of the code. The first round was regarding the usage of data structures to solve abstract problems; the second round was about optimizing the runtime of a mock model data-loading & training process.",
+    "questions": [
+      "I was asked to write code both times, though I chatted with the interviewer about my coding experience just a little bit."
+    ]
+  },
+  {
+    "page": 6,
+    "position": 3,
+    "role": "Software Engineer",
+    "date_text": "22 de jul de 2025",
+    "location": "Singapur",
+    "application": "Acudí a una entrevista en Speechify (Singapur)",
+    "interview": "just send me a email to finish a take-home project, and require to record the screen, and write the code without any ai assistant. the project include the test case, you have to work fast",
+    "questions": ["use the language you choosed to finis a TTL cache"]
+  },
+  {
+    "page": 6,
+    "position": 4,
+    "role": "Software Engineer",
+    "date_text": "30 de jun de 2025",
+    "location": "Portland, ME",
+    "application": "Me postulé en línea. El proceso tomó 2 días. Acudí a una entrevista en Speechify (Portland, ME) en may 2025",
+    "interview": "I received an invitation the recruitment team to schedule and conduct a technical assessment. The assessment was for React and TypeScript skills, but used more JavaScript and DOM manipulation than the aforementioned two.",
+    "questions": []
+  },
+  {
+    "page": 6,
+    "position": 5,
+    "role": "Software Engineer",
+    "date_text": "22 de jun de 2025",
+    "location": null,
+    "application": "Acudí a una entrevista en Speechify",
+    "interview": "You need to write a text parser for their app during 90 mins being recorded by camera. Important note - you cannot use anything, no blogs, no stackoverflow. So if you never heard of specific browser apis to parse text (and 99% of us never heard of them because no other business will use them) you will not pass. My opinion - waste of time. I regret I didn't read reviews here before.",
+    "questions": ["write a text parser for their app"]
+  },
+  {
+    "page": 7,
+    "position": 1,
+    "role": "Software Engineer",
+    "date_text": "1 de may de 2025",
+    "location": null,
+    "application": "Me postulé en línea. Acudí a una entrevista en Speechify",
+    "interview": "Annoying automatic emails, they feel they are written fully by AI, pushing the candidate to do a camera and screen-recorded 90-minute technical challenge ASAP. The challenge itself doesn't make any sense, it relies too much on DOM functions that 99% of us do not use at work, felt like I went back to 2010 or even before jQuery was a thing... and if you don't know a specific function that gets the response structure you want from a DOM component, then you waste too much time and it will be not enough to complete the challenge. The challenge doesn't really test your React skills because the custom hook they tell you to create must use all these functions you need to create using DOM functions. They want you to do a solution done their way as they already have tests that must pass according to their solution. I believe that if the candidates provided their own solution, it would be a much better way to evaluate the candidates. I think what they are doing is using the tests to automatically dismiss the candidate if a single test didn't pass. This challenge is feasible to be done in 90 minutes only by the people working there already, and if they want someone from the outside to join, that's not how the challenge should work.",
+    "questions": [
+      "1. Find top level readable nodes by parsing HTML (yes, really) 2. Get the height of the first line of a paragraph from an element"
+    ]
+  },
+  {
+    "page": 7,
+    "position": 2,
+    "role": "Software Engineer",
+    "date_text": "11 de abr de 2025",
+    "location": null,
+    "application": "Me postulé en línea. Acudí a una entrevista en Speechify en abr 2025",
+    "interview": "It starts with an automated email telling you that you've been selected to start the loop. The stages seem fine; 90m timed take home to start, then 90m with the hiring manager for behavioral/technical/system design screen. Then 90m with the CEO. Or so it seems? The description of this process differs in the body of the automated email you get and the attached PDF they tell you to review. So right off the bat I'm suspicious, but I figure why not do the take home, 90m is tightly scoped and I enjoy challenges. Unfortunately, the experience went downhill from there. When I clicked the link to schedule the take-home challenge, I was fairly shocked to find a notice that my screen, camera, and microphone would be recorded. Nowhere in the email or the documentation provided did it mention that this would happen, nor was it disclosed when scheduling the assessment. I understand the need to prevent cheating, but this felt invasive.I didn't even have a 30-minute introductory call with a recruiter about the role or the company, and now I was being asked to not only complete a take-home challenge but also consent to an unknown software recording my every move. Who knows what kind of telemetry it's running. I didn't, since I had no time to review and consent to it being run on my system. This felt more like a scam than anything else. I have no issue with live coding exercises, but this level of surveillance felt off-putting and poorly communicated. The lack of transparency and clarity made me feel uncomfortable, so I decided to withdraw. It might be a cool company to work for, their product certainly sounds awesome, but as candidates we need to be treated with a degree of respect, and in a world filled with scams, this poorly planned screening process was a huge red flag.",
+    "questions": ["I didn't get that far. The process is broken."]
+  },
+  {
+    "page": 7,
+    "position": 3,
+    "role": "Software Engineer",
+    "date_text": "11 de abr de 2025",
+    "location": null,
+    "application": "Me postulé en línea. Acudí a una entrevista en Speechify",
+    "interview": "I was given a link to complete a 90 minute assessment. The exercise itself was reasonable, but it is a requirement to enable screen recording and camera/microphone access while completing it. I personally felt uncomfortable with this exercise as a very first step in the process. I understand not allowing copilot to assist you, but they make it clear you are not allowed to reference StackOverflow either. I find this to be an unrealistic expectation since this a good resource for those of us who use it to jog our memory on how to solve certain problems (not for copy/pasting solutions). They're probably filtering out a lot of great candidates by making people jump through hoops to prove they are not cheating right from the start. If the first interaction you have with a company is immediate distrust, it probably doesn't end there at the interview. It was a red flag for me.",
+    "questions": ["Assessment involving DOM-manipulation using Typescript"]
+  },
+  {
+    "page": 7,
+    "position": 4,
+    "role": "Software Engineer",
+    "date_text": "10 de abr de 2025",
+    "location": null,
+    "application": "Me postulé en línea. El proceso tomó 1 semana. Acudí a una entrevista en Speechify en mar 2025",
+    "interview": "You receive an automated email explaining the interview process. 1. Manual Assessment (90 Minutes) 2. Hiring Manager Round (90 Minutes) 3. Live Coding (45 minutes) In each section, you are given hints of what might be discussed or required to be implemented for your own \"better preparation\". Hints are very vague, and you shouldn't expect them to be enough for preparation. I doubt it is even possible to pass without having a referral who'd tell you what to expect. As soon as you are ready for Manual Assessment, the process is as follows: you receive a link to GitHub, turn on camera/screen recording/mic, and have 90 mins to complete the task. The task is considered complete if it's functional. You have to commit the code before 90 minutes elapse because access to the repo is instantly revoked. I don't regret failing because the task aimed right from the start to trip you up. The pre-existing code lacks clarity and guidance. Be prepared to navigate yourself and understand obscure comment requirements.",
+    "questions": ["Mouse events, traversal of the DOM"]
+  },
+  {
+    "page": 7,
+    "position": 5,
+    "role": "Software Engineer",
+    "date_text": "1 de abr de 2025",
+    "location": null,
+    "application": "Me postulé a través de un reclutador. Acudí a una entrevista en Speechify",
+    "interview": "The process includes 3 technical and 1 behavioral round. All technical rounds include coding in Swift. They are tailored to address the skills required for your job at Speechify. The first round checks for your SwiftUI knowledge as we're predominantly using it across our codebase. The second round checks your ability to dive deeper into an existing codebase and spot performance issues. The third round covers your ability to execute a complex project end-to-end independently.",
+    "questions": ["What are you looking for in your next role?"]
+  },
+  {
+    "page": 8,
+    "position": 1,
+    "role": "Software Engineer",
+    "date_text": "27 de mar de 2025",
+    "location": null,
+    "application": "Me postulé en línea. El proceso tomó 1 semana. Acudí a una entrevista en Speechify en mar 2025",
+    "interview": "The interview process was stressful and the questions were pretty difficult only managed to get into the first round. I was having a lot of errors within the assessment and couldn't pass all of the tests and finish all 3 questions within the 90 minutes provided",
+    "questions": [
+      "Implement an LRU cache with a TTL",
+      "Given an SSML String parse it into a node tree",
+      "Take an SSML node tree and transform it back into a string"
+    ]
+  },
+  {
+    "page": 8,
+    "position": 2,
+    "role": "Software Engineer",
+    "date_text": "20 de mar de 2025",
+    "location": null,
+    "application": "Me postulé en línea. El proceso tomó 1 semana. Acudí a una entrevista en Speechify en mar 2025",
+    "interview": "I did not even get a recruiter call, but rather an automated email from them with a link to schedule my take-home test. It felt very... odd, jumping me straight to a take-home without an initial behavioral call to see if both me and them were a fit. I ended up scheduling it and when the time came, it felt like they did not trust any candidates, where you were going to be recorded via webcam, microphone, and screen. Sure it could be due to them not wanting anybody using AI to help them, but that added so much more stress and anxiety (to me at least). It would have been nice to have that disclaimer as well. Reading through what was being asked seemed rather very difficult, although it is most likely what would be done on the job day-to-day. This is cool to see for sure, but I would have definitely liked them to give some resources for candidates to either learn or brush up on prior to the assessment, as I believe, they wanted candidates to look up documentation and learn about it, but again, the assessment is 90 minutes, which added on to the stress and anxiety. It just feels like a lazy interview to me where they did not care for you, but want you to care about them.",
+    "questions": []
+  },
+  {
+    "page": 8,
+    "position": 3,
+    "role": "Software Engineer",
+    "date_text": "14 de mar de 2025",
+    "location": null,
+    "application": "Me postulé en línea. El proceso tomó 2 semanas. Acudí a una entrevista en Speechify en dic 2024",
+    "interview": "First step was a recorded coding test. 90 minutes to write and LRU cache and SSML (XML) parser. They hinted in the material that parsing would be in the test, so I practiced writing a parser beforehand. Didn't manage to complete it all and got a rejection email couple days after. I think there must be a catch on the test that makes it easier to complete or the expectations are crazy high. LRU cache was fairly easy and because I practiced beforehand I managed to get the XLM parser down to 3 failing tests, but ran out of time. Without practice I couldn't have completed even half of it within the given time.",
+    "questions": ["write an ssml parser and lru cache"]
+  },
+  {
+    "page": 8,
+    "position": 4,
+    "role": "Software Engineer",
+    "date_text": "6 de mar de 2025",
+    "location": null,
+    "application": "Me postulé a través de una recomendación de un empleado. El proceso tomó 2 meses. Acudí a una entrevista en Speechify en feb 2025",
+    "interview": "The interview process mainly consists of four technical stages. At the end, you'll have to have a short meeting with the CEO talking about your motivation of joining the company, etc..",
+    "questions": ["My biggest area of improvement."]
+  },
+  {
+    "page": 8,
+    "position": 5,
+    "role": "Software Engineer",
+    "date_text": "6 de mar de 2025",
+    "location": "Las Vegas, NV",
+    "application": "Acudí a una entrevista en Speechify (Las Vegas, NV)",
+    "interview": "Phone screening then take 1.5 hour home coding assessment. It's probably average difficulty technically speaking but a lot to get through. I thought it was a scam at first until the recruiter called me.",
+    "questions": ["Walk me through your resume."]
+  },
+  {
+    "page": 9,
+    "position": 1,
+    "role": "Software Engineer",
+    "date_text": "23 de dic de 2024",
+    "location": null,
+    "application": "Acudí a una entrevista en Speechify",
+    "interview": "Coding test online before speaking to any employee I thought the coding challenge was okay because it was related to real work. You had to record yourself while doing it. However, it was setup with different technologies than what the job posting asked for They of course don't give any feedback",
+    "questions": ["At what age did you start coding"]
+  },
+  {
+    "page": 9,
+    "position": 2,
+    "role": "Software Engineer",
+    "date_text": "16 de oct de 2024",
+    "location": "Berlín",
+    "application": "Acudí a una entrevista en Speechify (Berlín) en jun 2024",
+    "interview": "Mir wurde eine Testaufgabe mit Aufnahme von Bildschirm, Ton und Kamera gestellt. 2 Aufgaben. Ich habe einen geschafft, den zweiten aber nicht beendet. Danach haben sie mich nicht mehr kontaktiert. --- I was given a test task with recording the screen, sound and camera. 2 tasks. I did one, the second not to the end. They did not contact me after that.",
+    "questions": ["Warum haben Sie sich für einen Jobwechsel entschieden?"]
+  },
+  {
+    "page": 9,
+    "position": 3,
+    "role": "Software Developer",
+    "date_text": "11 de oct de 2024",
+    "location": null,
+    "application": "Me postulé en línea. El proceso tomó 5 días. Acudí a una entrevista en Speechify en jun 2024",
+    "interview": "Sent CV, got invite to coding exercise directly. You are given 90mins to solve some code in a github repository, so that tests pass. All related to text to speech, description lang, api, etc. Should solve without external libs and other help.",
+    "questions": [
+      "LRU cache implementation with TTL",
+      "SSML parser implementation, from String to Node Tree",
+      "SSML parser implementation, from Node Tree to String"
+    ]
+  },
+  {
+    "page": 9,
+    "position": 4,
+    "role": "Software Engineer",
+    "date_text": "2 de sept de 2024",
+    "location": null,
+    "application": "Me postulé en línea. El proceso tomó 2 meses. Acudí a una entrevista en Speechify en ago 2024",
+    "interview": "The interview process was smooth. First there was an automated online screening round with a 90 minute timeline. A system design round and a live coding round followed. In both rounds questions were focused on the current product.",
+    "questions": ["How would you approach designing the product?"]
+  },
+  {
+    "page": 9,
+    "position": 5,
+    "role": "Software Engineer",
+    "date_text": "31 de ago de 2024",
+    "location": "Singapur",
+    "application": "Acudí a una entrevista en Speechify (Singapur)",
+    "interview": "Quite positive, and instructions are included in the test, which takes a bit of time before the actual start. You must know HTML CSS and JavaScript fundamentally, and also React hooks as well.",
+    "questions": ["Make the small application all test pass."]
+  },
+  {
+    "page": 10,
+    "position": 1,
+    "role": "Software Engineer",
+    "date_text": "22 de ago de 2024",
+    "location": null,
+    "application": "Me postulé a través de un reclutador. El proceso tomó 4 semanas. Acudí a una entrevista en Speechify en jul 2024",
+    "interview": "4 technical rounds: 1st round: Coding Problems (Automated) (90 minutes) 2nd round: Live Coding (1 hour) 3rd round: System Design (1 hour) 4th round: Past Experiences / Live Coding (1 hour) All the interviews are online.",
+    "questions": [
+      "1. Implement LRU Cache / XML Parser 2. Implement job queue 3. Design search autocomplete system 4. Refactor / Improving LRU cache"
+    ]
+  },
+  {
+    "page": 10,
+    "position": 2,
+    "role": "Software Engineer",
+    "date_text": "21 de ago de 2024",
+    "location": null,
+    "application": "Me postulé en línea. Acudí a una entrevista en Speechify",
+    "interview": "The interview process was smooth and well-organized. It started with a friendly screening call, followed by a coding challenge that felt relevant to the job. The technical interviews were straightforward and focused on real problem-solving. Overall, it was a positive experience, and everything was clear and respectful throughout.",
+    "questions": []
+  },
+  {
+    "page": 10,
+    "position": 3,
+    "role": "Software Engineer",
+    "date_text": "21 de ago de 2024",
+    "location": null,
+    "application": "Me postulé a través de un reclutador. El proceso tomó 2 semanas. Acudí a una entrevista en Speechify en ene 2023",
+    "interview": "The interview consisted of multiple phases. I had an initial discussion with someone from HR where I was presented info about the company, what they do and their vision as well as how the product was born. Quite an interesting story. After that there were two technical interviews: a coding one and a system design one. Lastly, I had a short call with Cliff, the founder of Speechify where he wanted to know me a bit and talk about me and the company's vision",
+    "questions": [
+      "Excluding the technical interview, everything was more or less a discussion about my past experience, the work which I did, any interesting projects and based on what I heard about Speechify, if I think it will bee a good fit for my career."
+    ]
+  },
+  {
+    "page": 10,
+    "position": 4,
+    "role": "Software Engineer",
+    "date_text": "6 de ago de 2024",
+    "location": null,
+    "application": "Me postulé en línea. El proceso tomó 3 semanas. Acudí a una entrevista en Speechify en jun 2024",
+    "interview": "Process consist of 1 codility challenge that took almost 2 hours, then I had 2 technical interviews and finally I meet the CEO Cliff in person. I had a couple of meetings in between about finances, one checkpoint (not sure the purpose) and one about my references. It was pretty intense and detailed; it's the first such recruitment process I have experienced. Pretty unique.",
+    "questions": [
+      "Tasks were based on mostly on vanilla JS, despite the first codility part - it was React mixed with library API integration."
+    ]
+  },
+  {
+    "page": 10,
+    "position": 5,
+    "role": "Software Engineer",
+    "date_text": "9 de may de 2024",
+    "location": "Hanói",
+    "application": "Me postulé en línea. El proceso tomó 1 día. Acudí a una entrevista en Speechify (Hanói) en abr 2024",
+    "interview": "After completing the assignments on GitHub, I'm completely ghosted by the company. HR doesn't reply to my email, the repo where I put my code got set to private, I got no feedback whatsoever. Very weird since all their headhunts still pumping out \"Speechify is hiring\" posts on platforms.",
+    "questions": ["Assignment for React.js web app with text to speech feature"]
+  },
+  {
+    "page": 11,
+    "position": 1,
+    "role": "Software Engineer",
+    "date_text": "6 de may de 2024",
+    "location": null,
+    "application": "Me postulé a través de un reclutador. Acudí a una entrevista en Speechify",
+    "interview": "Manual coding session (includes coding problems to solve, primary focus was not on particular technologies, but on creative and non-standard thinking and engineering mindset), Technical interview on system design, architecture, problem solving and previous experience",
+    "questions": ["Q: What were your primary responsibilities as a Team Lead?"]
+  },
+  {
+    "page": 11,
+    "position": 2,
+    "role": "Software Engineer",
+    "date_text": "30 de mar de 2024",
+    "location": null,
+    "application": "Me postulé en línea. Acudí a una entrevista en Speechify",
+    "interview": "First interview was a screen shared coding challenge, instructions were clear and it was average difficulty. However interview time was at 6 AM, which I found disrupting. I withdrew my application, but if you passed the first stage you'd get paid $100 for your time, which is cool.",
+    "questions": ["Create a custom react hook"]
+  },
+  {
+    "page": 11,
+    "position": 3,
+    "role": "Software Engineer",
+    "date_text": "22 de ene de 2024",
+    "location": null,
+    "application": "Me postulé en línea. Acudí a una entrevista en Speechify",
+    "interview": "The interview process was well-structured, with clear communication and timely responses at each stage. The technical challenges were relevant and effectively assessed my skills. Overall, it was a positive experience that left me with a good understanding of the role and the company's expectations.\"",
+    "questions": [
+      "About experience and challenges I faced during my career. Technical questions"
+    ]
+  },
+  {
+    "page": 11,
+    "position": 4,
+    "role": "Software Engineer",
+    "date_text": "22 de ene de 2024",
+    "location": null,
+    "application": "Acudí a una entrevista en Speechify",
+    "interview": "The interview process was amazing, they guided me through the procedure, and asked only things that were relevant for me to do the job. There were no non-sense puzzles or irrelevant problems that you had to memorise. The interviewers were helpful and nice.",
+    "questions": [
+      "Q: I was given a system design problem where I had to collaborate with the interviewer to come up with a solution that not only solves the problem but scales well considering their audience and usecase."
+    ]
+  },
+  {
+    "page": 11,
+    "position": 5,
+    "role": "Software Developer",
+    "date_text": "31 de dic de 2023",
+    "location": null,
+    "application": "Acudí a una entrevista en Speechify",
+    "interview": "The interview process consisted of three rounds, starting with a phone screen. The initial rounds focused on problem-solving questions related to an XML parser from string and LRU cache. If successful, the next stage involved a high-level interview. Subsequently, candidates would proceed to an final round of Sn manager/HR.",
+    "questions": ["1. XML nodes from given string 2. LRU cache based problem"]
+  },
+  {
+    "page": 12,
+    "position": 1,
+    "role": "Software Engineer",
+    "date_text": "9 de nov de 2023",
+    "location": null,
+    "application": "Me postulé a través de un reclutador. El proceso tomó 3 días. Acudí a una entrevista en Speechify en nov 2023",
+    "interview": "1. HR Department 2. Live coding ~3 hours of your life 3. Top management Interview This company won't be able to share with you all the contract condition , only after you will spend your time 3 stage of interview , spend tons of your time for live coding and stress. Then Finance Department could share with contract details .",
+    "questions": [
+      "Just standard questions with HR. I didn't proceed , I declined live coding ..."
+    ]
+  },
+  {
+    "page": 12,
+    "position": 2,
+    "role": "Software Engineer",
+    "date_text": "21 de abr de 2023",
+    "location": "New York, NY",
+    "application": "Me postulé a través de un reclutador. El proceso tomó 2 semanas. Acudí a una entrevista en Speechify (New York, NY) en abr 2023",
+    "interview": "1 round - behavioral questions 2 round - technical task on react and typescript. 3 round - system design task at the beginning it was okay but they stopped answering and disappeared after the second round. At the technical interview there were no software engineers so that you can ask something. There was one hour and half to solve the task but it's not enough for completing this well with performant algorithms and good architecture.",
+    "questions": [
+      "Parse xml, use their service to display words that are read from phrase."
+    ]
+  },
+  {
+    "page": 12,
+    "position": 3,
+    "role": "Software Engineer",
+    "date_text": "31 de mar de 2023",
+    "location": null,
+    "application": "Acudí a una entrevista en Speechify",
+    "interview": "1. Talk with the hiring manager The hiring manager talks about the company. What does the Company currently build? What next plan? 2. 3 Task live coding 90mins for 3 Tasks",
+    "questions": ["1. Talk with the hiring manager 2. 3 Task live coding"]
+  },
+  {
+    "page": 12,
+    "position": 4,
+    "role": "Software Engineer",
+    "date_text": "21 de oct de 2021",
+    "location": "Miami, FL",
+    "application": "Me postulé en línea. El proceso tomó 5 semanas. Acudí a una entrevista en Speechify (Miami, FL) en sept 2020",
+    "interview": "First an HR Call, then a tech screen where you get asked a problem to solve related to their business, and then another tech screen with the tech lead where he asks you an algorithm question, and a bunch of knowledge based questions.",
+    "questions": [
+      "How would you generate a list of all possible closed (), given n?"
+    ]
+  }
+]

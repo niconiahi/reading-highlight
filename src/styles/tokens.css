@@ -1,0 +1,27 @@
+:root {
+  --bg-black: #000;
+  --bg-darker: #0a0a0a;
+  --bg-dark: #0d0d0d;
+  --bg-1: #111;
+  --bg-2: #161616;
+  --bg-3: #1a1a1a;
+  --bg-4: #1f1f1f;
+  --border-1: #222;
+  --border-2: #2e2e2e;
+  --border-3: #3a3a3a;
+  --text-1: #f5f0e1;
+  --text-2: #c9c2ad;
+  --text-3: #8a8578;
+  --text-dark: #1a1a1a;
+  --accent-blue: #8aa1c7;
+  --accent-blue-deep: #6f7fb8;
+  --accent-green: #7ab97a;
+  --accent-gold: #e2c97a;
+  --cream: #c9bd97;
+  --highlight-sentence: rgba(102, 113, 153, 0.55);
+  --highlight-sentence-hover: rgba(102, 113, 153, 0.3);
+  --highlight-word: #5b6cf0;
+  --font-serif: Georgia, 'Times New Roman', serif;
+  --font-sans: system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+}

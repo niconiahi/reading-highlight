@@ -1,0 +1,945 @@
+{
+  "text": "This is a LibriVox recording. All LibriVox recordings are in the public domain. For more information, and to find out how you can volunteer, please visit LibriVox.org. Recording by Peter Yersley. Abu Ben-Adam by Lee Hunt. Abu Ben-Adam, may his tribe increase, awoke one night From a deep dream of peace and sore within the moonlight in his room, making it rich and like a lily in bloom, an angel writing in a book of gold. Exceeding peace had made Ben Adam bold, and to the presence in the room he said, what rightest thou? The vision raised its head, and with a look made of all sweet accord, answered, the names of those who love the Lord. And is mine one? said Abu. Nay, not so, replied the angel. Abu spoke more low, but cheerily still, and said, I praise thee then, write to me as one that loves his fellow men. The angel wrote and vanished. The next night it came again with a great wakening light and showed the names whom love of God had blessed and lo! Ben Adam's name led all the rest.",
+  "words": [
+    {
+      "text": "This",
+      "start": 2.568,
+      "end": 2.788
+    },
+    {
+      "text": "is",
+      "start": 3.288,
+      "end": 3.368
+    },
+    {
+      "text": "a",
+      "start": 3.449,
+      "end": 3.469
+    },
+    {
+      "text": "LibriVox",
+      "start": 3.529,
+      "end": 4.189
+    },
+    {
+      "text": "recording.",
+      "start": 4.249,
+      "end": 4.769
+    },
+    {
+      "text": "All",
+      "start": 5.45,
+      "end": 5.65
+    },
+    {
+      "text": "LibriVox",
+      "start": 5.73,
+      "end": 6.29
+    },
+    {
+      "text": "recordings",
+      "start": 6.33,
+      "end": 6.91
+    },
+    {
+      "text": "are",
+      "start": 7.151,
+      "end": 7.231
+    },
+    {
+      "text": "in",
+      "start": 7.271,
+      "end": 7.351
+    },
+    {
+      "text": "the",
+      "start": 7.371,
+      "end": 7.451
+    },
+    {
+      "text": "public",
+      "start": 7.511,
+      "end": 7.851
+    },
+    {
+      "text": "domain.",
+      "start": 7.931,
+      "end": 8.371
+    },
+    {
+      "text": "For",
+      "start": 9.152,
+      "end": 9.252
+    },
+    {
+      "text": "more",
+      "start": 9.292,
+      "end": 9.472
+    },
+    {
+      "text": "information,",
+      "start": 9.512,
+      "end": 10.172
+    },
+    {
+      "text": "and",
+      "start": 10.533,
+      "end": 10.673
+    },
+    {
+      "text": "to",
+      "start": 10.753,
+      "end": 10.853
+    },
+    {
+      "text": "find",
+      "start": 10.893,
+      "end": 11.113
+    },
+    {
+      "text": "out",
+      "start": 11.213,
+      "end": 11.333
+    },
+    {
+      "text": "how",
+      "start": 11.413,
+      "end": 11.553
+    },
+    {
+      "text": "you",
+      "start": 11.593,
+      "end": 11.713
+    },
+    {
+      "text": "can",
+      "start": 11.753,
+      "end": 11.893
+    },
+    {
+      "text": "volunteer,",
+      "start": 11.953,
+      "end": 12.594
+    },
+    {
+      "text": "please",
+      "start": 12.974,
+      "end": 13.274
+    },
+    {
+      "text": "visit",
+      "start": 13.314,
+      "end": 13.674
+    },
+    {
+      "text": "LibriVox.org.",
+      "start": 13.934,
+      "end": 15.535
+    },
+    {
+      "text": "Recording",
+      "start": 17.016,
+      "end": 17.577
+    },
+    {
+      "text": "by",
+      "start": 17.657,
+      "end": 17.797
+    },
+    {
+      "text": "Peter",
+      "start": 17.837,
+      "end": 18.157
+    },
+    {
+      "text": "Yersley.",
+      "start": 18.197,
+      "end": 18.697
+    },
+    {
+      "text": "Abu",
+      "start": 20.958,
+      "end": 21.339
+    },
+    {
+      "text": "Ben-Adam",
+      "start": 21.779,
+      "end": 22.439
+    },
+    {
+      "text": "by",
+      "start": 23.62,
+      "end": 23.8
+    },
+    {
+      "text": "Lee",
+      "start": 23.9,
+      "end": 24.18
+    },
+    {
+      "text": "Hunt.",
+      "start": 24.32,
+      "end": 24.641
+    },
+    {
+      "text": "Abu",
+      "start": 26.502,
+      "end": 26.902
+    },
+    {
+      "text": "Ben-Adam,",
+      "start": 27.022,
+      "end": 27.642
+    },
+    {
+      "text": "may",
+      "start": 28.363,
+      "end": 28.563
+    },
+    {
+      "text": "his",
+      "start": 28.623,
+      "end": 28.763
+    },
+    {
+      "text": "tribe",
+      "start": 28.863,
+      "end": 29.283
+    },
+    {
+      "text": "increase,",
+      "start": 29.343,
+      "end": 29.924
+    },
+    {
+      "text": "awoke",
+      "start": 30.844,
+      "end": 31.244
+    },
+    {
+      "text": "one",
+      "start": 31.685,
+      "end": 31.805
+    },
+    {
+      "text": "night",
+      "start": 31.925,
+      "end": 32.165
+    },
+    {
+      "text": "From",
+      "start": 32.925,
+      "end": 33.105
+    },
+    {
+      "text": "a",
+      "start": 33.145,
+      "end": 33.165
+    },
+    {
+      "text": "deep",
+      "start": 33.266,
+      "end": 33.546
+    },
+    {
+      "text": "dream",
+      "start": 33.906,
+      "end": 34.206
+    },
+    {
+      "text": "of",
+      "start": 34.267,
+      "end": 34.327
+    },
+    {
+      "text": "peace",
+      "start": 34.447,
+      "end": 34.787
+    },
+    {
+      "text": "and",
+      "start": 35.568,
+      "end": 35.668
+    },
+    {
+      "text": "sore",
+      "start": 35.768,
+      "end": 36.088
+    },
+    {
+      "text": "within",
+      "start": 36.129,
+      "end": 36.449
+    },
+    {
+      "text": "the",
+      "start": 36.489,
+      "end": 36.549
+    },
+    {
+      "text": "moonlight",
+      "start": 36.609,
+      "end": 37.13
+    },
+    {
+      "text": "in",
+      "start": 37.21,
+      "end": 37.27
+    },
+    {
+      "text": "his",
+      "start": 37.33,
+      "end": 37.47
+    },
+    {
+      "text": "room,",
+      "start": 37.55,
+      "end": 37.81
+    },
+    {
+      "text": "making",
+      "start": 38.271,
+      "end": 38.671
+    },
+    {
+      "text": "it",
+      "start": 38.751,
+      "end": 38.831
+    },
+    {
+      "text": "rich",
+      "start": 39.012,
+      "end": 39.332
+    },
+    {
+      "text": "and",
+      "start": 39.892,
+      "end": 39.973
+    },
+    {
+      "text": "like",
+      "start": 40.053,
+      "end": 40.273
+    },
+    {
+      "text": "a",
+      "start": 40.313,
+      "end": 40.333
+    },
+    {
+      "text": "lily",
+      "start": 40.413,
+      "end": 40.733
+    },
+    {
+      "text": "in",
+      "start": 40.793,
+      "end": 40.874
+    },
+    {
+      "text": "bloom,",
+      "start": 40.934,
+      "end": 41.294
+    },
+    {
+      "text": "an",
+      "start": 41.835,
+      "end": 41.915
+    },
+    {
+      "text": "angel",
+      "start": 42.135,
+      "end": 42.455
+    },
+    {
+      "text": "writing",
+      "start": 43.036,
+      "end": 43.496
+    },
+    {
+      "text": "in",
+      "start": 43.536,
+      "end": 43.596
+    },
+    {
+      "text": "a",
+      "start": 43.636,
+      "end": 43.676
+    },
+    {
+      "text": "book",
+      "start": 43.717,
+      "end": 43.917
+    },
+    {
+      "text": "of",
+      "start": 43.957,
+      "end": 44.037
+    },
+    {
+      "text": "gold.",
+      "start": 44.137,
+      "end": 44.517
+    },
+    {
+      "text": "Exceeding",
+      "start": 46.219,
+      "end": 46.78
+    },
+    {
+      "text": "peace",
+      "start": 46.92,
+      "end": 47.22
+    },
+    {
+      "text": "had",
+      "start": 47.681,
+      "end": 47.801
+    },
+    {
+      "text": "made",
+      "start": 47.901,
+      "end": 48.241
+    },
+    {
+      "text": "Ben",
+      "start": 48.542,
+      "end": 48.722
+    },
+    {
+      "text": "Adam",
+      "start": 48.782,
+      "end": 49.082
+    },
+    {
+      "text": "bold,",
+      "start": 49.182,
+      "end": 49.643
+    },
+    {
+      "text": "and",
+      "start": 50.344,
+      "end": 50.504
+    },
+    {
+      "text": "to",
+      "start": 50.944,
+      "end": 51.084
+    },
+    {
+      "text": "the",
+      "start": 51.124,
+      "end": 51.224
+    },
+    {
+      "text": "presence",
+      "start": 51.285,
+      "end": 51.705
+    },
+    {
+      "text": "in",
+      "start": 51.785,
+      "end": 51.845
+    },
+    {
+      "text": "the",
+      "start": 51.885,
+      "end": 51.965
+    },
+    {
+      "text": "room",
+      "start": 52.025,
+      "end": 52.266
+    },
+    {
+      "text": "he",
+      "start": 52.406,
+      "end": 52.506
+    },
+    {
+      "text": "said,",
+      "start": 52.566,
+      "end": 52.786
+    },
+    {
+      "text": "what",
+      "start": 53.427,
+      "end": 53.567
+    },
+    {
+      "text": "rightest",
+      "start": 53.687,
+      "end": 54.188
+    },
+    {
+      "text": "thou?",
+      "start": 54.308,
+      "end": 54.528
+    },
+    {
+      "text": "The",
+      "start": 55.252,
+      "end": 55.332
+    },
+    {
+      "text": "vision",
+      "start": 55.372,
+      "end": 55.772
+    },
+    {
+      "text": "raised",
+      "start": 56.193,
+      "end": 56.533
+    },
+    {
+      "text": "its",
+      "start": 56.613,
+      "end": 56.733
+    },
+    {
+      "text": "head,",
+      "start": 56.793,
+      "end": 57.013
+    },
+    {
+      "text": "and",
+      "start": 57.574,
+      "end": 57.694
+    },
+    {
+      "text": "with",
+      "start": 57.754,
+      "end": 57.894
+    },
+    {
+      "text": "a",
+      "start": 57.934,
+      "end": 57.974
+    },
+    {
+      "text": "look",
+      "start": 58.034,
+      "end": 58.315
+    },
+    {
+      "text": "made",
+      "start": 58.615,
+      "end": 58.855
+    },
+    {
+      "text": "of",
+      "start": 58.895,
+      "end": 58.975
+    },
+    {
+      "text": "all",
+      "start": 59.175,
+      "end": 59.375
+    },
+    {
+      "text": "sweet",
+      "start": 59.515,
+      "end": 59.836
+    },
+    {
+      "text": "accord,",
+      "start": 60.016,
+      "end": 60.536
+    },
+    {
+      "text": "answered,",
+      "start": 60.917,
+      "end": 61.297
+    },
+    {
+      "text": "the",
+      "start": 61.857,
+      "end": 61.978
+    },
+    {
+      "text": "names",
+      "start": 62.058,
+      "end": 62.578
+    },
+    {
+      "text": "of",
+      "start": 62.778,
+      "end": 62.858
+    },
+    {
+      "text": "those",
+      "start": 62.958,
+      "end": 63.379
+    },
+    {
+      "text": "who",
+      "start": 63.519,
+      "end": 63.679
+    },
+    {
+      "text": "love",
+      "start": 63.739,
+      "end": 64.019
+    },
+    {
+      "text": "the",
+      "start": 64.079,
+      "end": 64.199
+    },
+    {
+      "text": "Lord.",
+      "start": 64.259,
+      "end": 64.66
+    },
+    {
+      "text": "And",
+      "start": 66.381,
+      "end": 66.481
+    },
+    {
+      "text": "is",
+      "start": 66.541,
+      "end": 66.621
+    },
+    {
+      "text": "mine",
+      "start": 66.681,
+      "end": 66.922
+    },
+    {
+      "text": "one?",
+      "start": 67.062,
+      "end": 67.202
+    },
+    {
+      "text": "said",
+      "start": 67.662,
+      "end": 67.842
+    },
+    {
+      "text": "Abu.",
+      "start": 67.982,
+      "end": 68.243
+    },
+    {
+      "text": "Nay,",
+      "start": 68.983,
+      "end": 69.384
+    },
+    {
+      "text": "not",
+      "start": 69.684,
+      "end": 69.864
+    },
+    {
+      "text": "so,",
+      "start": 69.984,
+      "end": 70.284
+    },
+    {
+      "text": "replied",
+      "start": 70.965,
+      "end": 71.365
+    },
+    {
+      "text": "the",
+      "start": 71.405,
+      "end": 71.525
+    },
+    {
+      "text": "angel.",
+      "start": 71.625,
+      "end": 71.946
+    },
+    {
+      "text": "Abu",
+      "start": 72.746,
+      "end": 73.107
+    },
+    {
+      "text": "spoke",
+      "start": 73.687,
+      "end": 74.007
+    },
+    {
+      "text": "more",
+      "start": 74.408,
+      "end": 74.648
+    },
+    {
+      "text": "low,",
+      "start": 74.748,
+      "end": 75.068
+    },
+    {
+      "text": "but",
+      "start": 75.609,
+      "end": 75.769
+    },
+    {
+      "text": "cheerily",
+      "start": 75.889,
+      "end": 76.409
+    },
+    {
+      "text": "still,",
+      "start": 76.509,
+      "end": 76.87
+    },
+    {
+      "text": "and",
+      "start": 77.19,
+      "end": 77.29
+    },
+    {
+      "text": "said,",
+      "start": 77.37,
+      "end": 77.61
+    },
+    {
+      "text": "I",
+      "start": 78.651,
+      "end": 78.711
+    },
+    {
+      "text": "praise",
+      "start": 78.791,
+      "end": 79.031
+    },
+    {
+      "text": "thee",
+      "start": 79.071,
+      "end": 79.252
+    },
+    {
+      "text": "then,",
+      "start": 79.292,
+      "end": 79.472
+    },
+    {
+      "text": "write",
+      "start": 80.252,
+      "end": 80.553
+    },
+    {
+      "text": "to",
+      "start": 80.573,
+      "end": 80.613
+    },
+    {
+      "text": "me",
+      "start": 80.693,
+      "end": 80.833
+    },
+    {
+      "text": "as",
+      "start": 81.393,
+      "end": 81.473
+    },
+    {
+      "text": "one",
+      "start": 81.654,
+      "end": 81.834
+    },
+    {
+      "text": "that",
+      "start": 81.934,
+      "end": 82.074
+    },
+    {
+      "text": "loves",
+      "start": 82.174,
+      "end": 82.474
+    },
+    {
+      "text": "his",
+      "start": 82.534,
+      "end": 82.694
+    },
+    {
+      "text": "fellow",
+      "start": 82.774,
+      "end": 83.115
+    },
+    {
+      "text": "men.",
+      "start": 83.175,
+      "end": 83.375
+    },
+    {
+      "text": "The",
+      "start": 84.817,
+      "end": 84.917
+    },
+    {
+      "text": "angel",
+      "start": 85.037,
+      "end": 85.398
+    },
+    {
+      "text": "wrote",
+      "start": 85.518,
+      "end": 85.838
+    },
+    {
+      "text": "and",
+      "start": 86.719,
+      "end": 86.819
+    },
+    {
+      "text": "vanished.",
+      "start": 86.879,
+      "end": 87.38
+    },
+    {
+      "text": "The",
+      "start": 88.401,
+      "end": 88.481
+    },
+    {
+      "text": "next",
+      "start": 88.541,
+      "end": 88.841
+    },
+    {
+      "text": "night",
+      "start": 89.061,
+      "end": 89.382
+    },
+    {
+      "text": "it",
+      "start": 89.802,
+      "end": 89.862
+    },
+    {
+      "text": "came",
+      "start": 89.942,
+      "end": 90.163
+    },
+    {
+      "text": "again",
+      "start": 90.223,
+      "end": 90.563
+    },
+    {
+      "text": "with",
+      "start": 91.063,
+      "end": 91.204
+    },
+    {
+      "text": "a",
+      "start": 91.264,
+      "end": 91.304
+    },
+    {
+      "text": "great",
+      "start": 91.364,
+      "end": 91.664
+    },
+    {
+      "text": "wakening",
+      "start": 92.105,
+      "end": 92.645
+    },
+    {
+      "text": "light",
+      "start": 92.725,
+      "end": 93.046
+    },
+    {
+      "text": "and",
+      "start": 93.706,
+      "end": 93.826
+    },
+    {
+      "text": "showed",
+      "start": 93.966,
+      "end": 94.287
+    },
+    {
+      "text": "the",
+      "start": 94.307,
+      "end": 94.467
+    },
+    {
+      "text": "names",
+      "start": 94.507,
+      "end": 94.988
+    },
+    {
+      "text": "whom",
+      "start": 95.108,
+      "end": 95.328
+    },
+    {
+      "text": "love",
+      "start": 95.428,
+      "end": 95.728
+    },
+    {
+      "text": "of",
+      "start": 95.888,
+      "end": 95.969
+    },
+    {
+      "text": "God",
+      "start": 96.109,
+      "end": 96.409
+    },
+    {
+      "text": "had",
+      "start": 96.769,
+      "end": 96.909
+    },
+    {
+      "text": "blessed",
+      "start": 97.01,
+      "end": 97.47
+    },
+    {
+      "text": "and",
+      "start": 98.351,
+      "end": 98.511
+    },
+    {
+      "text": "lo!",
+      "start": 98.671,
+      "end": 99.052
+    },
+    {
+      "text": "Ben",
+      "start": 99.692,
+      "end": 99.933
+    },
+    {
+      "text": "Adam's",
+      "start": 99.993,
+      "end": 100.433
+    },
+    {
+      "text": "name",
+      "start": 100.573,
+      "end": 100.914
+    },
+    {
+      "text": "led",
+      "start": 101.434,
+      "end": 101.714
+    },
+    {
+      "text": "all",
+      "start": 102.095,
+      "end": 102.275
+    },
+    {
+      "text": "the",
+      "start": 102.335,
+      "end": 102.435
+    },
+    {
+      "text": "rest.",
+      "start": 102.475,
+      "end": 102.796
+    }
+  ]
+}
