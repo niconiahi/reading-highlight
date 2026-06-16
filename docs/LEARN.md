@@ -626,50 +626,87 @@ shape for "did the user actually engage with this document."
 ### The core five
 
 **"How would you implement the highlight?"**
-> `Range.getClientRects()` over the passage's text node, rendered
-> as `<rect>` elements inside an `aria-hidden` SVG layered behind
-> the prose. The text node stays untouched — no wrapping spans —
-> so reader-mode extractors, screen readers, and selection all see
-> the prose you authored. SVG over absolute-positioned `<div>`s
-> for cleaner composition and `rx`/`ry` per-corner rounding. Three
-> layers — hover sentence, active sentence, current word — painted
-> in DOM order.
+> The constraint I started from: the prose has to stay a single
+> text node — reader mode, screen readers, and Select-All all need
+> it intact. So wrapping each word in a `<span>` is off the table.
+>
+> The trick is `Range.getClientRects()`. Make a Range over a slice
+> of the text, ask the browser for the bounding rects, paint them
+> in a sibling `aria-hidden` SVG behind the text. `<rect>` elements
+> with `rx`/`ry` for rounded pills. The original text node is never
+> touched.
+>
+> Happy to dig into the SVG-vs-divs choice, how I re-measure on
+> reflow, or why I skipped the CSS Custom Highlight API.
 
 **"How do you keep the highlight in sync with audio?"**
-> `requestAnimationFrame` reading `audio.currentTime`, then
-> `findLastIndex(w => w.start <= t)` over the word table — largest
-> index with `start ≤ t`. That semantics keeps the highlight on the
-> previous word during silences and makes short words unmissable
-> regardless of frame timing. Linear scan is fine for ~150 words;
-> swap to binary search past ~10k. `timeupdate` is too coarse —
-> ~4×/sec on Chrome.
+> The naive instinct is to listen for `timeupdate` on the audio
+> element. But it fires maybe four times a second — well below the
+> rate of normal speech, so the highlight visibly trails the voice.
+>
+> So instead I run a `requestAnimationFrame` loop. Each frame: read
+> `audio.currentTime`, find the last word whose `start` ≤ that time,
+> update the index. `rAF` matches the display refresh, pauses in
+> background tabs, and makes the highlight feel like it *is* the
+> audio rather than chasing it.
+>
+> The "last word whose start ≤ t" semantics has a couple of nice
+> properties — I can go into why that's the right comparison rather
+> than `start ≤ t < end`, or talk about how this scales for longer
+> documents.
 
 **"How would you implement click-to-seek?"**
-> `document.caretPositionFromPoint(x, y)`, confirm the hit node is
-> the passage's text node, turn `(node, offset)` into a character
-> index, look up the sentence with `find_sentence_index_by_offset`,
-> then `audio.currentTime = timings[sentence.first_word_index].start`.
-> The rAF loop does the rest. Sentence granularity over word
-> granularity because a single word is too small a tap target.
+> First decision: sentence granularity, not word. A single word is
+> too small a touch target — you'd miss-tap constantly. Sentences
+> are big, finger-friendly, and they match how people think about
+> "where I want to be" in prose.
+>
+> Then it's `document.caretPositionFromPoint(x, y)` — give it
+> screen coordinates, it hands back the text node and character
+> offset under the cursor. I confirm the hit is actually the prose
+> (not the overlay or some padding), map that offset to a sentence
+> index, and set `audio.currentTime` to the start of that sentence's
+> first word. The rAF sync loop catches up on the next frame; I
+> don't have to touch the highlight myself.
+>
+> Can go deeper on the caret API itself, or how I handle clicks
+> that land between two words.
 
 **"What about lock-screen / hardware media keys?"**
-> `navigator.mediaSession` with `setActionHandler` for play, pause,
-> seekforward, seekbackward, previoustrack, nexttrack — the last
-> two rebound to *previous sentence* and *next sentence* because
-> "previous track" intuition in a reader is "previous sentence,"
-> not "ten seconds back." `MediaMetadata` for the lock-screen label,
-> `setPositionState` for the scrub bar in the OS control. Graceful
-> no-op when `mediaSession` is unavailable.
+> The Media Session API. You register handlers on
+> `navigator.mediaSession` for play, pause, seek-forward,
+> seek-backward, previous-track, next-track. The OS then surfaces
+> those in its native control — lock screen, notification,
+> Bluetooth headset, smartwatch — and routes the user's button
+> presses back to your handlers.
+>
+> The interesting bit is "previous track" and "next track." For a
+> podcast those mean "previous episode." For a reader, the
+> intuition is "previous sentence." So I rebind them to sentence
+> stepping instead of episode skipping. `MediaMetadata` controls
+> the label on the lock screen; `setPositionState` keeps the OS's
+> scrub bar in sync with where playback actually is.
+>
+> Happy to go into `setPositionState` specifically — its support
+> story and why it needs a `try/catch`.
 
 **"How do you handle accessibility?"**
-> The audio is the announcement, so `aria-live` is reserved for an
-> optional positional fallback (the current word, for users who've
-> muted TTS). No `tabindex` on decorative prose. The overlay SVG is
-> `aria-hidden` with `pointer-events: none`, so AT sees the prose
-> untouched. Semantic elements throughout — `<blockquote cite>`,
-> `<time datetime>`, `<input type="range">`, `aria-label` on icon
-> buttons. The `sr-only` pattern keeps invisible content in the
-> AT tree where `display: none` wouldn't.
+> The big realisation: the audio narration *is* the accessibility
+> story for the prose. A screen-reader user can hear the
+> recording — so I don't want the screen reader to ALSO announce
+> every word. That's a duplicate voice.
+>
+> Concretely: the highlight overlay is `aria-hidden` with
+> `pointer-events: none`, so assistive tech only sees the
+> underlying prose, and clicks land on the text node rather than
+> the SVG. There's a single `aria-live` region that announces the
+> current word, but it only fires when the audio isn't audible —
+> paused, muted, or volume zero. One voice at a time.
+>
+> The rest is just semantic HTML: `<blockquote cite>` for the
+> passage, `<time datetime>` for elapsed time, `<input type="range">`
+> for the scrubber, `aria-label` on icon buttons. Happy to walk
+> through any of those, or the `sr-only` pattern specifically.
 
 ### Sync and timing
 
@@ -708,12 +745,17 @@ shape for "did the user actually engage with this document."
 
 **"Why `Range.getClientRects` instead of wrapping every word in a
 span?"**
-> Wrapping every word destroys the prose. A 200-word paragraph
-> becomes 200+ empty spans; reader-mode extractors, screen
-> crawlers, and selection all see markup instead of text. The
-> range approach keeps `<blockquote>The text…</blockquote>`
-> intact and paints the highlight in a sibling SVG layer that's
-> `aria-hidden`.
+> The instinct is to wrap each word: `<span>Abou</span> <span>Ben</span>
+> <span>Adhem</span>…`. It works for highlighting, but it destroys
+> the prose. A 200-word paragraph becomes 200+ empty spans —
+> reader-mode extractors, AT crawlers, even plain Select-All now
+> see markup instead of text.
+>
+> `Range.getClientRects()` lets you ask the browser "where would
+> this slice of the text node be painted?" without modifying the
+> DOM at all. The text stays a single
+> `<blockquote>The text…</blockquote>`, and the highlight lives in
+> a sibling `aria-hidden` SVG layer the prose doesn't know about.
 
 **"Why SVG over absolute-positioned `<div>`s?"**
 > One SVG node with many `<rect>` children composites more cleanly
@@ -732,24 +774,40 @@ span?"**
 > nodes is the cleanest possible story.
 
 **"`Range.getClientRects()` — what's the gotcha?"**
-> Coordinates are viewport-relative, so you must subtract the
-> bounding rect of your positioned ancestor to draw into a local
-> layer. And you must re-measure on resize, font load, and
-> content change — a single `ResizeObserver` on the passage
-> wrapper catches all three (it fires on internal layout shifts,
-> not just viewport changes). Write the new rect into `$state`
-> and let `$derived` consumers re-run. No manual invalidation.
+> Two gotchas, both about coordinates and freshness.
+>
+> First, the coordinates are viewport-relative. If your overlay
+> is positioned inside a wrapper, you have to subtract that
+> wrapper's bounding rect from every glyph rect to translate into
+> the overlay's local space. Easy to forget on the first pass;
+> shows up as the highlight appearing offset by some scroll
+> amount.
+>
+> Second, the rects go stale on anything that changes layout —
+> viewport resize, font load, content change, ancestor width
+> shifts. A `ResizeObserver` on the passage wrapper catches all
+> of those at once; it fires on internal layout shifts, not just
+> viewport changes. Write the new rect into reactive state and
+> let derived consumers re-run on their own. No manual
+> invalidation, no tick counters.
 
 ### Click and hit-testing
 
 **"User clicked between two words. What happens?"**
-> `caretPositionFromPoint` returns the nearest text offset.
-> `find_sentence_index_by_offset` maps the offset to a sentence
-> by linear scan over the sentence spans, returning the
-> previous sentence if the offset falls in a gap. Then seek to
-> that sentence's `first_word_index`. Confirm the hit node is
-> the passage's text node before doing anything — clicks on
-> decoration or scrollbars shouldn't seek.
+> The browser doesn't care about word boundaries —
+> `caretPositionFromPoint` just hands back the nearest text
+> offset. A click in a gap returns whichever character offset is
+> closest, typically the start of the next word.
+>
+> From there, `find_sentence_index_by_offset` walks the sentence
+> spans and answers "which span contains this offset, or — if
+> we're in a gap — the previous one." That fallback is the point:
+> clicks on whitespace shouldn't fall off the end. Then I seek to
+> that sentence's first word.
+>
+> The check I always remember to do: confirm the hit node is
+> actually the passage's text node. Clicks on the overlay,
+> scrollbar, or padding shouldn't trigger a seek.
 
 ### Persistence
 
@@ -789,12 +847,17 @@ span?"**
 ### Accessibility
 
 **"Why is there an `aria-live` announcing the current word?"**
-> Fallback for AT users who have muted the TTS voice and want
-> positional awareness from their own screen reader. Live
-> regions are a debated choice here — double-speak is the risk
-> — so the conservative move is to gate it behind a user
-> setting. If your AT users overwhelmingly run with TTS on,
-> remove it.
+> Because the audio recording is the primary accessibility story,
+> but only when the user is actually hearing it. If they've
+> paused, muted, or dropped the volume to zero, the screen reader
+> becomes the only voice — and without a live region, they get no
+> signal at all about where in the prose playback is.
+>
+> So there's one `aria-live="polite"` region that announces the
+> current word, gated on `playback.audible`. When the audio is
+> playing at volume, the region emits an empty string and stays
+> silent. When the audio isn't audible, it emits the current
+> word. One voice at a time — never both.
 
 **"`display: none` vs the visually-hidden pattern?"**
 > `display: none` and `visibility: hidden` remove from the
@@ -815,29 +878,46 @@ span?"**
 ### System framing
 
 **"Walk me through the architecture from server to highlight."**
-> Server returns `{ text, ranges, words, sentences }` as JSON
-> (or, in this prototype, a static file fetched in the page
-> `load`). `<audio>` element streams the audio with progressive
-> download. A `requestAnimationFrame` loop reads
-> `audio.currentTime` into reactive state; `findLastIndex`
-> produces the current word index; `find_sentence_index_by_word`
-> derives the active sentence. The overlay effect calls
-> `Range.getClientRects()` for three named ranges
-> (hover/active/word), subtracts the passage origin, and writes
-> `<rect>`s into an `aria-hidden` SVG. Click-to-seek runs
-> `caretPositionFromPoint` → character offset →
-> `find_sentence_index_by_offset` → `audio.currentTime`.
-> Media Session API binds the OS transport. `localStorage`
-> persists position and rate on `pagehide`.
+> Bottom up. The server returns a JSON document: the prose plus
+> precomputed timings — where each word starts in the audio,
+> where each sentence begins and ends. The page loads that on
+> mount and an `<audio>` element streams the recording.
+>
+> The runtime is three loops. First, a `requestAnimationFrame`
+> loop reads `audio.currentTime` every frame, finds which word
+> that timestamp belongs to, writes the index into reactive
+> state. Second, the overlay reads that state — plus the hovered
+> sentence, plus the passage's bounding rect — and computes
+> `<rect>` geometry via `Range.getClientRects()` for whatever
+> needs to be painted. Third, a `ResizeObserver` writes the
+> passage's dimensions into state whenever layout shifts, and
+> the overlay re-derives on its own.
+>
+> User input has two paths in. Clicks on the prose go
+> `caretPositionFromPoint` → character offset → sentence index →
+> seek. Hardware media keys go through the Media Session API to
+> the same seek functions.
+>
+> Persistence is `localStorage`, written on `pagehide`, read on
+> the next mount.
+>
+> Can zoom into any of those layers.
 
 **"If you had to ship in two days, what do you cut?"**
-> Keep: `<audio>`, rAF + `findLastIndex`, `Range.getClientRects`
-> rendered into SVG, click-to-seek with `caretPositionFromPoint`,
-> `preservesPitch`, the keyboard shortcuts. Cut: Media Session,
-> `aria-live` current-word fallback, bfcache logging, the
-> structured telemetry, the service worker. The cut list is
-> additive — each piece can ship as a follow-up without
-> rearchitecting.
+> The keepers are the things that make it feel like the demo: an
+> `<audio>` element with `preservesPitch`, the rAF +
+> `findLastIndex` sync loop, the `getClientRects`-into-SVG
+> highlight, click-to-seek, and the keyboard shortcuts. Take any
+> one of those away and it stops being the same product.
+>
+> What I'd defer: the Media Session integration, the aria-live
+> fallback, bfcache logging, the structured telemetry, the
+> service worker. Each of those is a follow-up PR — not a
+> rearchitecture — so the cut is additive rather than painful.
+>
+> Honestly, though — Media Session is maybe two hours of work and
+> it's the thing reviewers notice. If "two days" means "ship
+> Friday," I'd probably put it back in the keep set.
 
 **"If you had a month, what's the highest-leverage thing you'd
 add?"**
