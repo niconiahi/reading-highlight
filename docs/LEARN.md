@@ -37,7 +37,7 @@ below is one of those mappings
 - *click → character range → sentence index → word index → time*
 
 Tokenization itself runs offline at build time (see `/whisper`), so
-the runtime never touches `Intl.Segmenter`. The TS surface that
+the runtime never touches [`Intl.Segmenter`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Intl/Segmenter). The TS surface that
 matters is two tiny linear scans in `src/lib/tokenizer.ts`:
 `find_sentence_index_by_offset` (used by click/hover hit-testing) and
 `find_sentence_index_by_word` (used to derive the active sentence
@@ -49,46 +49,46 @@ from the current word).
 
 ### `<audio>` is enough
 
-The home page reaches for `HTMLAudioElement` and nothing else. It
+The home page reaches for [`HTMLAudioElement`](https://developer.mozilla.org/docs/Web/API/HTMLAudioElement) and nothing else. It
 hands you progressive download, seeking, format negotiation, and a
-`currentTime` that's accurate to well under a frame, all for free.
-You only graduate to Web Audio when you need something it can't give
+[`currentTime`](https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/currentTime) that's accurate to well under a frame, all for free.
+You only graduate to [Web Audio](https://developer.mozilla.org/docs/Web/API/Web_Audio_API) when you need something it can't give
 you: visualizers, gapless concat across utterances, sample-accurate
 scheduling, or compression.
 
 The properties that matter in this reader cluster around one verb:
 "touch the timeline*. `currentTime` is the spine of everything — you
 read it every frame to drive the highlight, and you write it to seek.
-`playbackRate` is the knob the user actually grabs; the home page
+[`playbackRate`](https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/playbackRate) is the knob the user actually grabs; the home page
 cycles through `[0.75, 1, 1.25, 1.5, 2]`. The browser resamples
 naively when you change it, though, so voices go chipmunky unless you
-pair it with `preservesPitch = true` at construction. That pairing
+pair it with [`preservesPitch = true`](https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/preservesPitch) at construction. That pairing
 isn't cosmetic: a dyslexic user reading at 1.5× hears a voice they
 can't parse without it, which defeats the product. The remaining two
-worth touching are `duration` and `paused`, both pure UI state.
+worth touching are [`duration`](https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/duration) and [`paused`](https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/paused), both pure UI state.
 
 ### Events we actually listen for
 
 `create_playback` wires the full event surface:
 
 - `play` / `pause` — drive the reactive `playing` flag.
-- `loadedmetadata` — `duration` isn't known until this fires.
-- `ended` — telemetry only; UI keeps the highlight where it landed.
-- `error` — inspect `audio.error.code` (the `MEDIA_ERR_*` family) and
+- [`loadedmetadata`](https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/loadedmetadata_event) — `duration` isn't known until this fires.
+- [`ended`](https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/ended_event) — telemetry only; UI keeps the highlight where it landed.
+- `error` — inspect [`audio.error.code`](https://developer.mozilla.org/docs/Web/API/MediaError) (the `MEDIA_ERR_*` family) and
   log. A 403 mid-playback shouldn't reset the user's place.
-- `waiting` / `canplaythrough` — telemetry signals for buffering
+- [`waiting`](https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/waiting_event) / [`canplaythrough`](https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/canplaythrough_event) — telemetry signals for buffering
   trouble; useful when interpreting reports of "the highlight froze."
 
-The event you'll notice missing is **`timeupdate`**. The spec lets
+The event you'll notice missing is **[`timeupdate`](https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/timeupdate_event)**. The spec lets
 the browser fire it whenever; in practice you get 4–15 firings per
 second. That's slower than most short words, so the highlight
-visibly trails the voice. We use `requestAnimationFrame` instead
+visibly trails the voice. We use [`requestAnimationFrame`](https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame) instead
 (§2).
 
 ### Accessibility implications
 
 The audio *is* the accessibility feature. The page exposes a single
-`aria-live="polite"` region with the current word — that's a
+[`aria-live="polite"`](https://developer.mozilla.org/docs/Web/Accessibility/ARIA/Attributes/aria-live) region with the current word — that's a
 deliberate, debated choice. The defensible reading is: the live
 region is a fallback for screen-reader users who have muted the TTS
 voice and want positional awareness from their own AT. If that
@@ -101,8 +101,8 @@ the per-word stream.
 
 ## 2. The time-sync loop
 
-The home page runs one loop: an `<audio>` element, a
-`requestAnimationFrame` tick that copies `audio.currentTime` into
+The home page runs one loop: an [`<audio>`](https://developer.mozilla.org/docs/Web/API/HTMLAudioElement) element, a
+[`requestAnimationFrame`](https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame) tick that copies [`audio.currentTime`](https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/currentTime) into
 reactive state, and a derived computation that turns that time into a
 word index.
 
@@ -111,7 +111,7 @@ word index.
 It's tied to the display refresh, it pauses in background tabs (so a
 hidden tab doesn't burn CPU advancing a highlight nobody can see),
 and it aligns with the compositor — meaning your DOM writes land on
-the same frame the browser is about to paint. `setInterval` does
+the same frame the browser is about to paint. [`setInterval`](https://developer.mozilla.org/docs/Web/API/setInterval) does
 none of these things.
 
 ### `findLastIndex` with the right semantics
@@ -134,7 +134,7 @@ whichever word started most recently.
 
 ### Linear scan vs binary search
 
-The home page does a linear `findLastIndex` over ~150 words. That's
+The home page does a linear [`findLastIndex`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/findLastIndex) over ~150 words. That's
 ~150 comparisons per frame — invisible. For a 10k-word document
 it's 10k comparisons at 60 Hz, ~14 ms wasted per second, which
 starts to bite. The fix is binary search (`O(log n)`, ~14
@@ -169,7 +169,7 @@ search; the sentence layer is purely a projection of the word layer.
 
 This is the section the home page is built around. Three named
 layers — hover sentence, active sentence, current word — painted as
-rounded `<rect>` elements inside a single SVG that sits behind the
+rounded [`<rect>`](https://developer.mozilla.org/docs/Web/SVG/Element/rect) elements inside a single [SVG](https://developer.mozilla.org/docs/Web/SVG/Element/svg) that sits behind the
 unmodified prose.
 
 ```ts
@@ -179,7 +179,7 @@ range.setEnd(text_node, end);
 for (const r of range.getClientRects()) { ... }
 ```
 
-The killer method. Given any `Range` over text — even a sub-range
+The killer method. Given any [`Range`](https://developer.mozilla.org/docs/Web/API/Range) over text — even a sub-range
 that isn't aligned to any element boundary — the browser hands you
 one `DOMRect` per line-box. You take those rects, subtract the
 offset of a positioned ancestor, and render them as
@@ -188,22 +188,21 @@ absolute-positioned shapes in a layer *behind* the text.
 The home page renders into **SVG** rather than absolute-positioned
 `<div>`s. The trade is small but real: one SVG node with many
 `<rect>` children composites a hair more efficiently than N
-positioned divs, and `rx`/`ry` give per-corner rounding without CSS
-per element. The overlay is one `<svg aria-hidden="true">` with
+positioned divs, and [`rx`/`ry`](https://developer.mozilla.org/docs/Web/SVG/Attribute/rx) give per-corner rounding without CSS
+per element. The overlay is one `<svg aria-hidden="true">` ([`aria-hidden`](https://developer.mozilla.org/docs/Web/Accessibility/ARIA/Attributes/aria-hidden)) with
 three groups of `<rect>` — `.hover`, `.active`, `.word` — painted in
 DOM order so word sits on top of sentence sits on top of hover.
 
 ### Why this technique
 
-- **The prose stays as you wrote it.** `<blockquote class="passage"
-  cite="…">The text…</blockquote>` survives untouched. No wrapping
+- **The prose stays as you wrote it.** [`<blockquote class="passage" cite="…">The text…</blockquote>`](https://developer.mozilla.org/docs/Web/HTML/Element/blockquote) survives untouched. No wrapping
   spans, no hundred nodes per paragraph. Reader-mode extractors,
   search crawlers, screen readers, and your future self all see the
   prose you authored.
 - **Sub-range freedom.** You can highlight any character range,
   whether or not it aligns to an element. The technique doesn't
   care.
-- **Full styling freedom.** Unlike the CSS Custom Highlight API
+- **Full styling freedom.** Unlike the [CSS Custom Highlight API](https://developer.mozilla.org/docs/Web/API/CSS_Custom_Highlight_API)
   (which restricts you to `color`, `background-color`,
   `text-decoration`, `text-shadow`, and the
   `-webkit-text-stroke-*` family — no `border-radius`, no padding),
@@ -215,7 +214,7 @@ The two techniques you'd reach for instead:
 - `box-decoration-break: clone` on inline spans — pure CSS, wraps
   per line for free, **but** requires wrapping the highlight target
   in an element, which destroys clean prose markup. Requies splitting
-  text into as many `<span>` as the text is. So, that's a lot
+  text into as many [`<span>`](https://developer.mozilla.org/docs/Web/HTML/Element/span) as the text is. So, that's a lot
 - CSS Custom Highlight API — zero DOM nodes, the cleanest possible
   story, **but** flat rectangles only and Firefox support was
   flagged for a long time. Right answer when you want a search-hit
@@ -223,7 +222,7 @@ The two techniques you'd reach for instead:
 
 ### Coordinates and the BLEED
 
-`getClientRects()` returns viewport-relative rectangles. The home
+[`getClientRects()`](https://developer.mozilla.org/docs/Web/API/Range/getClientRects) returns viewport-relative rectangles. The home
 page keeps the passage's bounding rect in `passage_rect` state
 (see §3 *Re-measure on reflow*), exposes it as a `$derived`
 `origin = { x: passage_rect.left, y: passage_rect.top }`, and
@@ -231,7 +230,7 @@ subtracts it from every rect so the SVG draws in local coordinates.
 A small `PAD_X = 3` / `PAD_Y = 2` is added so the painted rect is
 slightly larger than the glyph box (matches the visual intuition of
 a highlight that *contains* the word). The wrapping SVG carries a
-`BLEED = 10` margin via its `viewBox` so the rects at the edge of
+`BLEED = 10` margin via its [`viewBox`](https://developer.mozilla.org/docs/Web/SVG/Attribute/viewBox) so the rects at the edge of
 the passage aren't clipped, and the SVG's CSS positions it with
 `top: -10px; left: -10px; overflow: visible`.
 
@@ -239,7 +238,7 @@ the passage aren't clipped, and the SVG's CSS positions it with
 
 Costs you take on with `getClientRects`: you must re-measure on
 resize, on font load, on any content change. The home page wires a
-single `ResizeObserver` on the passage wrapper and stores the
+single [`ResizeObserver`](https://developer.mozilla.org/docs/Web/API/ResizeObserver) on the passage wrapper and stores the
 result as state:
 
 ```ts
@@ -269,18 +268,18 @@ the observed element (rare).
 
 ### Accessibility
 
-The overlay SVG is `aria-hidden="true"` with `pointer-events: none`.
+The overlay SVG is `aria-hidden="true"` with [`pointer-events: none`](https://developer.mozilla.org/docs/Web/CSS/pointer-events).
 Selection and AT both see the underlying prose, untouched. Clicks
 land on the text node (§4); the SVG never intercepts them. The
 visual depends on JS — if scripts fail, the prose stays readable
 but the highlight vanishes. That's graceful degradation, not
 failure, but it's worth naming in interviews.
 
-### Why not `Range.surroundContents()`
+### Why not [`Range.surroundContents()`](https://developer.mozilla.org/docs/Web/API/Range/surroundContents)
 
 It throws `InvalidStateError` if the range crosses any element
 boundary. The moment your text contains a single inline `<strong>`,
-`<a>`, or previous wrapper, you crash. Useful for "wrap a fresh
+[`<a>`](https://developer.mozilla.org/docs/Web/HTML/Element/a), or previous wrapper, you crash. Useful for "wrap a fresh
 user selection once" and basically nothing else.
 
 ### Why not `innerHTML`
@@ -301,7 +300,7 @@ never what the user wanted anyway.
 
 ### Hit-testing text
 
-`document.caretPositionFromPoint(x, y)` returns
+[`document.caretPositionFromPoint(x, y)`](https://developer.mozilla.org/docs/Web/API/Document/caretPositionFromPoint) returns
 `{ offsetNode, offset }` — the text node and character offset
 under the cursor:
 
@@ -325,9 +324,9 @@ the hovered sentence. So one function — `sentence_at` — turns a
 pixel into a sentence index, and both click-to-seek and hover
 call it.
 
-### The `Selection` API is not wired here
+### The [`Selection`](https://developer.mozilla.org/docs/Web/API/Selection) API is not wired here
 
-The home page does not yet listen for `selectionchange` or expose a
+The home page does not yet listen for [`selectionchange`](https://developer.mozilla.org/docs/Web/API/Document/selectionchange_event) or expose a
 "play selection" affordance. The plumbing is the same — take
 `document.getSelection().getRangeAt(0)`, map its `startContainer`
 + `startOffset` to a character index, binary-search the word table
@@ -347,7 +346,7 @@ Three shortcuts, wired at the `window` level by
 
 The handler short-circuits when the event target is an `<input>` or
 `<textarea>` so it doesn't steal keystrokes from form fields.
-`e.code` (physical key, layout-independent) is the right choice for
+[`e.code`](https://developer.mozilla.org/docs/Web/API/KeyboardEvent/code) (physical key, layout-independent) is the right choice for
 positional shortcuts like Space and the arrows; `e.key` would be
 correct only when the meaning *is* the printed character (`/` to
 open search, `b` to bookmark).
@@ -360,7 +359,7 @@ the page and the arrows from moving a selection caret.
 ## 6. Media Session API
 
 `attach_media_session` registers handlers with
-`navigator.mediaSession` so the OS-level transport (lock screen,
+[`navigator.mediaSession`](https://developer.mozilla.org/docs/Web/API/Media_Session_API) so the OS-level transport (lock screen,
 notification, hardware media keys, Bluetooth headset, smartwatch)
 controls playback:
 
@@ -374,10 +373,10 @@ controls playback:
   `find_sentence_index_by_word(word_index)` and seeks to
   sentence ±1's first word.
 
-`MediaMetadata` is set with the title and artist so the lock screen
+[`MediaMetadata`](https://developer.mozilla.org/docs/Web/API/MediaMetadata) is set with the title and artist so the lock screen
 shows "Abou Ben Adhem — Leigh Hunt" instead of the URL.
 
-### `setPositionState`
+### [`setPositionState`](https://developer.mozilla.org/docs/Web/API/MediaSession/setPositionState)
 
 `navigator.mediaSession.setPositionState({ duration, playbackRate,
 position })` tells the OS where playback currently is. Without it,
@@ -414,14 +413,14 @@ and the rest of the page is unaffected.
 
 ## 7. Persistence
 
-The home page persists two things in `localStorage`: the user's
+The home page persists two things in [`localStorage`](https://developer.mozilla.org/docs/Web/API/Window/localStorage): the user's
 position and their playback rate, keyed by
 `reading-highlight:abou-ben-adhem`.
 
 - **Read** on mount, inside the same `$effect` that creates the
   playback controller. Wrapped in `try/catch` so corrupt or
   disabled storage doesn't break the page.
-- **Write** on **`pagehide`**, not `beforeunload` and not every
+- **Write** on **[`pagehide`](https://developer.mozilla.org/docs/Web/API/Window/pagehide_event)**, not [`beforeunload`](https://developer.mozilla.org/docs/Web/API/Window/beforeunload_event) and not every
   tick. `localStorage` is synchronous and blocks the main thread;
   writing on every frame tanks the sync loop. `pagehide` is the
   right event because it fires on tab close, navigation, *and*
@@ -429,7 +428,7 @@ position and their playback rate, keyed by
   Safari.
 
 This is the entire persistence story for the home page. No
-IndexedDB, no Cache API beyond the service worker, no cross-device
+[IndexedDB](https://developer.mozilla.org/docs/Web/API/IndexedDB_API), no Cache API beyond the [service worker](https://developer.mozilla.org/docs/Web/API/Service_Worker_API), no cross-device
 sync. The point is the *discipline*: pick the cheapest primitive
 that gets the job done, write at natural pause points, never on
 the hot path.
@@ -454,7 +453,7 @@ is registration and graceful failure.
 
 ##### What it is
 
-"bfcache" is short for *back/forward cache*. When
+"bfcache" is short for *[back/forward cache](https://web.dev/bfcache/)*. When
 you navigate away from a page and then press the browser's Back
 (or Forward) button, modern browsers don't reload the previous
 page from scratch — they keep a *snapshot* of it in memory,
@@ -474,7 +473,7 @@ never lost.
 
 ##### How you detect it
 
-The browser fires a `pageshow` event every
+The browser fires a [`pageshow`](https://developer.mozilla.org/docs/Web/API/Window/pageshow_event) event every
 time the page becomes visible — both on a normal load *and* on a
 bfcache restore. To tell which one it is, you read the event's
 `persisted` flag: `true` means "this page came back from the
@@ -506,26 +505,26 @@ telemetry and move on.
 
 A scattering of small, deliberate choices:
 
-- **`<blockquote cite="…">`** for the passage. The semantic element
+- **[`<blockquote cite="…">`](https://developer.mozilla.org/docs/Web/HTML/Element/blockquote)** for the passage. The semantic element
   for quoted prose, with a machine-readable source URL. Beats
   `<div>` for free.
-- **`<time datetime="PT1M23S">1:23</time>`** for elapsed/total time.
+- **[`<time datetime="PT1M23S">1:23</time>`](https://developer.mozilla.org/docs/Web/HTML/Element/time)** for elapsed/total time.
   ISO 8601 duration format in `datetime`; human-readable text
   content. AT, search, copy-paste all benefit.
-- **`<input type="range">` for the scrubber.** Native, accessible,
+- **[`<input type="range">`](https://developer.mozilla.org/docs/Web/HTML/Element/input/range) for the scrubber.** Native, accessible,
   keyboard-operable, touchable. The fill is a CSS custom property
   `--fill` set inline from a `$derived` percentage — one source of
   truth, zero layout math.
-- **`aria-label` on every icon button.** Play/pause swaps its label
+- **[`aria-label`](https://developer.mozilla.org/docs/Web/Accessibility/ARIA/Attributes/aria-label) on every icon button.** Play/pause swaps its label
   with its state so screen readers announce the current action.
-- **`<span class="sr-only" aria-live="polite">`** announces the
+- **`<span class="sr-only" aria-live="polite">`** ([`aria-live`](https://developer.mozilla.org/docs/Web/Accessibility/ARIA/Attributes/aria-live)) announces the
   current word *only when the audio narration isn't the voice* —
   i.e. when playback is paused, muted, or volume is zero
   (`playback.audible` is false). When the recording is actively
   audible, the span emits an empty string so the screen reader
   doesn't echo what the user is already hearing. The `sr-only`
   pattern (absolute, 1px box, clipped) keeps content in the
-  accessibility tree where `display: none` would remove it.
+  accessibility tree where [`display: none`](https://developer.mozilla.org/docs/Web/CSS/display) would remove it.
 
 ### ISO 8601 durations in `<time datetime="…">`
 
@@ -578,7 +577,7 @@ There is no JS animation on the home page right now (the highlight
 is a pure repaint each frame, no transitions). If you add a
 sentence morph or a smooth-scroll-to-highlight later, gate
 `behavior: 'smooth'` and any CSS transition on
-`matchMedia('(prefers-reduced-motion: reduce)').matches`. Long
+`matchMedia('(prefers-reduced-motion: reduce)').matches` ([`matchMedia`](https://developer.mozilla.org/docs/Web/API/Window/matchMedia), [`prefers-reduced-motion`](https://developer.mozilla.org/docs/Web/CSS/@media/prefers-reduced-motion)). Long
 reader sessions and vestibular sensitivity are a bad combination.
 
 ---
@@ -608,7 +607,7 @@ window.addEventListener('error', on_err);
 window.addEventListener('unhandledrejection', on_rej);
 ```
 
-`error` fires for synchronous throws that escape; `unhandledrejection`
+[`error`](https://developer.mozilla.org/docs/Web/API/Window/error_event) ([`ErrorEvent`](https://developer.mozilla.org/docs/Web/API/ErrorEvent)) fires for synchronous throws that escape; [`unhandledrejection`](https://developer.mozilla.org/docs/Web/API/Window/unhandledrejection_event) ([`PromiseRejectionEvent`](https://developer.mozilla.org/docs/Web/API/PromiseRejectionEvent))
 fires for Promises that reject with no `.catch`. They're two
 separate browser events for historical reasons, and you need both —
 listening to only one drops half your crashes. Each handler just
@@ -623,8 +622,8 @@ becomes a row in your logs rather than dying silently.
 The teardown removes both listeners, alongside the rAF cancel, the
 media session unhook, and the keyboard unhook — the entire effect
 is symmetric, which is how you avoid leaks across navigations in
-an SPA. `removeEventListener` needs the same function reference you
-passed to `addEventListener`, which is why `on_err` / `on_rej` are
+an SPA. [`removeEventListener`](https://developer.mozilla.org/docs/Web/API/EventTarget/removeEventListener) needs the same function reference you
+passed to [`addEventListener`](https://developer.mozilla.org/docs/Web/API/EventTarget/addEventListener), which is why `on_err` / `on_rej` are
 stored in named `const`s rather than inlined as arrow expressions.
 
 `session_summary` runs on teardown and reports `max_position`,
@@ -640,12 +639,12 @@ shape for "did the user actually engage with this document."
 #### "How would you implement the highlight?"
 The constraint I'd start from: the prose has to stay a single
 text node — reader mode, screen readers, and Select-All all need
-it intact. So wrapping each word in a `<span>` is off the table.
+it intact. So wrapping each word in a [`<span>`](https://developer.mozilla.org/docs/Web/HTML/Element/span) is off the table.
 
-The trick is `Range.getClientRects()`. I'd make a Range over a
+The trick is [`Range.getClientRects()`](https://developer.mozilla.org/docs/Web/API/Range/getClientRects). I'd make a [Range](https://developer.mozilla.org/docs/Web/API/Range) over a
 slice of the text, ask the browser for the bounding rects, and
-paint them in a sibling `aria-hidden` SVG behind the text —
-`<rect>` elements with `rx`/`ry` for rounded pills. The original
+paint them in a sibling [`aria-hidden`](https://developer.mozilla.org/docs/Web/Accessibility/ARIA/Attributes/aria-hidden) [SVG](https://developer.mozilla.org/docs/Web/SVG/Element/svg) behind the text —
+[`<rect>`](https://developer.mozilla.org/docs/Web/SVG/Element/rect) elements with [`rx`/`ry`](https://developer.mozilla.org/docs/Web/SVG/Attribute/rx) for rounded pills. The original
 text node would never be touched.
 
 Happy to dig into [the SVG-vs-divs choice](#why-svg-over-absolute-positioned-divs),
@@ -684,7 +683,7 @@ amount.
 
 Second, the rects go stale on anything that changes layout —
 viewport resize, font load, content change, ancestor width
-shifts. A `ResizeObserver` on the passage wrapper catches all
+shifts. A [`ResizeObserver`](https://developer.mozilla.org/docs/Web/API/ResizeObserver) on the passage wrapper catches all
 of those at once; it fires on internal layout shifts, not just
 viewport changes. Write the new rect into reactive state and
 let derived consumers re-run on their own. No manual
@@ -700,12 +699,12 @@ line), the Highlight API would be the right call — zero DOM
 nodes is the cleanest possible story.
 
 #### "How would you keep the highlight in sync with audio?"
-The naive instinct is to listen for `timeupdate` on the audio
+The naive instinct is to listen for [`timeupdate`](https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/timeupdate_event) on the audio
 element. But it fires maybe four times a second — well below the
 rate of normal speech, so the highlight visibly trails the voice.
 
-So instead I'd run a `requestAnimationFrame` loop. Each frame:
-read `audio.currentTime`, find the last word whose `start` ≤ that
+So instead I'd run a [`requestAnimationFrame`](https://developer.mozilla.org/docs/Web/API/Window/requestAnimationFrame) loop. Each frame:
+read [`audio.currentTime`](https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/currentTime), find the last word whose `start` ≤ that
 time, update the index. `rAF` matches the display refresh, pauses
 in background tabs, and would make the highlight feel like it *is*
 the audio rather than chasing it.
@@ -722,21 +721,36 @@ the display refresh, pauses in background tabs, and aligns with
 the compositor.
 
 ##### "Why `findLastIndex`, not a forward pointer?"
-A forward pointer is faster per-frame but breaks on scrubs.
-Every seek (drag, click-to-seek, keyboard skip) forces you to
-reset and re-walk. `findLastIndex` is correct under arbitrary
-seeking. The win on the pointer is illusory; you're optimising
-the wrong axis. For very long documents, swap the linear scan
-for binary search — same semantics, `O(log n)`.
+A forward pointer is an index I'd keep between frames that only
+moves forward as time advances — instead of searching the whole
+array every frame, I remember which word I'm on and just check
+whether we've passed the next one yet. Per-frame cost is O(1)
+amortised because the pointer only ever increases.
 
-##### "Why `start ≤ t` and not `start ≤ t < end`?"
-Speech has silences between words — punctuation pauses, breath
-pauses, sentence ends. `start ≤ t < end` makes the highlight
-blink off during every silence. `start ≤ t` (the largest such
-index) keeps it on the last word spoken, which is what a reader
-wants. Bonus: a short word can't be skipped by a frame landing
-in a 5 ms gap, because the search resolves to the most recent
-start.
+The catch is it only works if time moves forward monotonically.
+Every seek (drag, click-to-seek, keyboard skip) jumps
+`current_time` backwards, the pointer goes stale, and I have to
+detect the seek and re-walk from zero. [`findLastIndex`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/findLastIndex) is
+stateless and correct under arbitrary seeking, so the win on the
+pointer is illusory; I'd be optimising the wrong axis. For very
+long documents, swap the linear scan for binary search — same
+semantics, `O(log n)`.
+
+##### "When does the highlight move to the next word?"
+The honest answer is: when the *next* word starts, not when the
+current one ends. Those sound equivalent and they aren't. Speech
+has silences all over it — punctuation pauses, breath pauses,
+sentence boundaries — and if I tie the highlight to "while this
+word is being spoken" it blinks off in every one of those gaps.
+A reader watching the page sees the highlight stutter, which
+reads as broken even though the audio is fine.
+
+So I don't ask "is `t` inside this word's interval." I ask "what
+was the last word that started." The current word stays
+highlighted right up to the moment the next one begins, the
+silences disappear from the UI, and short words can't be skipped
+by a frame landing in a 5 ms gap because the search always
+resolves to the most recent start.
 
 ##### "The highlight feels a bit late. What would you do?"
 I'd subtract a constant offset (60–100 ms) from `t` before the
@@ -752,15 +766,44 @@ roughly 150 comparisons per frame, completely invisible. For a
 10k-word document that's 10k comparisons at 60 Hz, ~14 ms wasted
 per second, which starts to bite the frame budget.
 
-I'd swap the linear scan for a binary search at that point —
-same `start ≤ t` semantics, but `O(log n)`. For 10k words that's
-~14 comparisons instead of 10k, and the upgrade is local: the
-caller doesn't change, only the search function does.
+I'd swap the linear scan for a [binary search](#how-does-binary-search-work-could-you-explain-it-to-me)
+at that point — same `start ≤ t` semantics, but `O(log n)`. For
+10k words that's ~14 comparisons instead of 10k, and the upgrade
+is local: the caller doesn't change, only the search function
+does.
 
 The principle: optimise when the size demands it, not before.
 The call-site comment in the codebase actually marks this
 upgrade path explicitly, so the next person on the file knows
 where the line is.
+
+##### "How does binary search work? Could you explain it to me?"
+The setup that makes it work: `timings` is sorted by `start`
+ascending — word `i+1` always starts after word `i`. That
+ordering is the whole reason binary search applies. Linear scan
+doesn't need it; binary search lives or dies by it.
+
+The idea is: instead of checking every word, I look at the
+middle one. If its `start` is `≤ t`, the answer I'm looking for
+is either that word or somewhere to its right, so I throw away
+the left half. If its `start` is `> t`, the answer is to the
+left, so I throw away the right half. Then I do the same thing
+on whichever half is left. Each step halves the search space, so
+10k words collapses in ~14 steps instead of 10k.
+
+What I'm computing is still "largest index `i` such that
+`words[i].start ≤ t`" — exactly what `findLastIndex` returns,
+just reached by halving instead of scanning. The tricky bit is
+the loop invariant: I track a `lo` and `hi`, and on each `≤ t`
+hit I move `lo` past the midpoint (because the midpoint is a
+*valid* candidate, but there might be a better one further
+right), and on each `> t` miss I pull `hi` back to the midpoint.
+When `lo` and `hi` meet, `lo - 1` is the answer.
+
+The reason that's worth getting right: an off-by-one in this
+loop doesn't crash — it just highlights the wrong word, which
+looks like a sync bug. The semantics have to match the linear
+version exactly, or the upgrade isn't local anymore.
 
 #### "How would you implement click-to-seek?"
 First decision I'd make: sentence granularity, not word. A single
@@ -768,7 +811,7 @@ word is too small a touch target — you'd miss-tap constantly.
 Sentences are big, finger-friendly, and they match how people
 think about "where I want to be" in prose.
 
-Then it's `document.caretPositionFromPoint(x, y)` — you give it
+Then it's [`document.caretPositionFromPoint(x, y)`](https://developer.mozilla.org/docs/Web/API/Document/caretPositionFromPoint) — you give it
 screen coordinates, it hands back the text node and character
 offset under the cursor. I'd confirm the hit is actually the
 prose (not the overlay or some padding), map that offset to a
@@ -816,7 +859,7 @@ actually the passage's text node. Clicks on the overlay,
 scrollbar, or padding shouldn't trigger a seek.
 
 #### "What about lock-screen / hardware media keys?"
-I'd reach for the Media Session API. You register handlers on
+I'd reach for the [Media Session API](https://developer.mozilla.org/docs/Web/API/Media_Session_API). You register handlers on
 `navigator.mediaSession` for play, pause, seek-forward,
 seek-backward, previous-track, next-track. The OS then surfaces
 those in its native control — lock screen, notification,
@@ -826,8 +869,8 @@ presses back to your handlers.
 The interesting bit is "previous track" and "next track." For a
 podcast those mean "previous episode." For a reader, the
 intuition is "previous sentence." So I'd rebind them to sentence
-stepping instead of episode skipping. `MediaMetadata` would set
-the label on the lock screen; `setPositionState` would keep the
+stepping instead of episode skipping. [`MediaMetadata`](https://developer.mozilla.org/docs/Web/API/MediaMetadata) would set
+the label on the lock screen; [`setPositionState`](https://developer.mozilla.org/docs/Web/API/MediaSession/setPositionState) would keep the
 OS's scrub bar in sync with where playback actually is.
 
 Happy to go into [`setPositionState` specifically — its support story and why it needs a `try/catch`](#whats-setpositionstate-and-why-the-trycatch).
@@ -879,13 +922,13 @@ announce every word. That's a duplicate voice.
 Concretely: I'd put `aria-hidden` and `pointer-events: none` on
 the highlight overlay, so assistive tech only sees the underlying
 prose, and clicks land on the text node rather than the SVG. I'd
-add a single `aria-live` region that announces the current word,
+add a single [`aria-live`](https://developer.mozilla.org/docs/Web/Accessibility/ARIA/Attributes/aria-live) region that announces the current word,
 gated so it only fires when the audio isn't audible — paused,
 muted, or volume zero. One voice at a time.
 
-The rest is just semantic HTML: `<blockquote cite>` for the
-passage, `<time datetime>` for elapsed time, `<input type="range">`
-for the scrubber, `aria-label` on icon buttons. Happy to walk
+The rest is just semantic HTML: [`<blockquote cite>`](https://developer.mozilla.org/docs/Web/HTML/Element/blockquote) for the
+passage, [`<time datetime>`](https://developer.mozilla.org/docs/Web/HTML/Element/time) for elapsed time, [`<input type="range">`](https://developer.mozilla.org/docs/Web/HTML/Element/input/range)
+for the scrubber, [`aria-label`](https://developer.mozilla.org/docs/Web/Accessibility/ARIA/Attributes/aria-label) on icon buttons. Happy to walk
 through any of those, or [the `sr-only` pattern specifically](#display-none-vs-the-visually-hidden-pattern).
 
 ##### "Why would you add an `aria-live` announcing the current word?"
@@ -902,7 +945,7 @@ string and stay silent. When the audio isn't audible, it would
 emit the current word. One voice at a time — never both.
 
 ##### "`display: none` vs the visually-hidden pattern?"
-`display: none` and `visibility: hidden` remove from the
+[`display: none`](https://developer.mozilla.org/docs/Web/CSS/display) and [`visibility: hidden`](https://developer.mozilla.org/docs/Web/CSS/visibility) remove from the
 accessibility tree. The clipped/1px-box `sr-only` pattern
 keeps content in the AT tree while hiding it visually. Use
 the latter for screen-reader-only labels, live regions,
@@ -910,27 +953,27 @@ off-screen heading structure.
 
 ##### "Why no `tabindex` on the passage?"
 The hover/click decoration on prose is a *visual affordance
-for mouse users*. Adding `tabindex` puts a keyboard tab stop
+for mouse users*. Adding [`tabindex`](https://developer.mozilla.org/docs/Web/HTML/Global_attributes/tabindex) puts a keyboard tab stop
 on the paragraph with nothing to do once focused. Keyboard
 users get the Space + arrow shortcuts instead, wired at the
 window level. If the prose ever carried a real action, wrap
-the trigger in a `<button>` or `<a>` and native focus
+the trigger in a [`<button>`](https://developer.mozilla.org/docs/Web/HTML/Element/button) or [`<a>`](https://developer.mozilla.org/docs/Web/HTML/Element/a) and native focus
 styling does the work.
 
 ### Persistence
 
 #### "When would you write to `localStorage`?"
-On `pagehide`, not every tick. `localStorage` is synchronous and
+On [`pagehide`](https://developer.mozilla.org/docs/Web/API/Window/pagehide_event), not every tick. [`localStorage`](https://developer.mozilla.org/docs/Web/API/Window/localStorage) is synchronous and
 blocks the main thread; writing on every frame would tank the
 sync loop. `pagehide` is the right event because it fires on tab
-close, navigation, *and* bfcache entry — `beforeunload` doesn't
+close, navigation, *and* [bfcache](https://web.dev/bfcache/) entry — [`beforeunload`](https://developer.mozilla.org/docs/Web/API/Window/beforeunload_event) doesn't
 fire reliably on mobile Safari. I'd wrap the write in `try/catch`
 so disabled storage doesn't break the page.
 
 #### "Why not IndexedDB?"
 Two strings — position and rate — don't justify it.
 `localStorage` is the right tool for small synchronous
-key-value state. IndexedDB earns its complexity for blobs
+key-value state. [IndexedDB](https://developer.mozilla.org/docs/Web/API/IndexedDB_API) earns its complexity for blobs
 (cached audio, downloaded utterances) and structured app
 state (timings JSON per document, bookmarks). The home page
 needs neither.
@@ -941,7 +984,7 @@ needs neither.
 Bottom up. The server would return a JSON document: the prose
 plus precomputed timings — where each word starts in the audio,
 where each sentence begins and ends. The page would load that on
-mount and an `<audio>` element would stream the recording.
+mount and an [`<audio>`](https://developer.mozilla.org/docs/Web/API/HTMLAudioElement) element would stream the recording.
 
 The runtime would be three loops. First, a `requestAnimationFrame`
 loop reading `audio.currentTime` every frame, finding which word
@@ -965,14 +1008,14 @@ Happy to zoom into any of those layers.
 
 #### "If you had to ship in two days, what do you cut?"
 The keepers are the things that make it feel like the demo: an
-`<audio>` element with `preservesPitch`, the rAF +
+`<audio>` element with [`preservesPitch`](https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/preservesPitch), the rAF +
 `findLastIndex` sync loop, the `getClientRects`-into-SVG
 highlight, click-to-seek, and the keyboard shortcuts. Take any
 one of those away and it stops being the same product.
 
 What I'd defer: the Media Session integration, the aria-live
 fallback, bfcache logging, the structured telemetry, the
-service worker. Each of those is a follow-up PR — not a
+[service worker](https://developer.mozilla.org/docs/Web/API/Service_Worker_API). Each of those is a follow-up PR — not a
 rearchitecture — so the cut is additive rather than painful.
 
 Honestly, though — Media Session is maybe two hours of work and
@@ -984,7 +1027,7 @@ I'd build virtualization for long documents — a window of ±N
 sentences rendered, recycled as the highlight advances —
 because it unblocks novels and textbooks, the categories where
 the accessibility need is sharpest. After that I'd add offline
-(cached audio + timings) and the `Selection` API for "play this
+(cached audio + timings) and the [`Selection`](https://developer.mozilla.org/docs/Web/API/Selection) API for "play this
 paragraph." Visualizers and waveform rendering look impressive in
 demos but change the daily-use experience very little, so they'd
 go last.
