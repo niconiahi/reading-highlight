@@ -1,24 +1,21 @@
 import { logger } from '$lib/telemetry';
 
-export type MediaSessionConfig = {
-  title: string;
-  artist: string;
-  on_prev_sentence: () => void;
-  on_next_sentence: () => void;
-};
-
-export type MediaSessionController = {
-  teardown: () => void;
-};
-
 const SEEK = 10;
-const NOOP: MediaSessionController = { teardown: () => {} };
+const safe_duration = (el: HTMLAudioElement) =>
+  Number.isFinite(el.duration) ? el.duration : 0;
 
 export function attach_media_session(
   audio_el: HTMLAudioElement,
-  config: MediaSessionConfig,
-): MediaSessionController {
-  if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return NOOP;
+  config: {
+    title: string;
+    artist: string;
+    on_prev_sentence: () => void;
+    on_next_sentence: () => void;
+  },
+): { teardown: () => void } {
+  if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) {
+    return { teardown: () => {} };
+  }
   const ms = navigator.mediaSession;
 
   if (typeof MediaMetadata !== 'undefined') {
@@ -35,7 +32,7 @@ export function attach_media_session(
     },
     seekforward: () => {
       log('seekforward');
-      const dur = Number.isFinite(audio_el.duration) ? audio_el.duration : 0;
+      const dur = safe_duration(audio_el);
       const next = audio_el.currentTime + SEEK;
       audio_el.currentTime = dur > 0 ? Math.min(dur, next) : next;
     },
@@ -53,7 +50,7 @@ export function attach_media_session(
 
   const update_position = () => {
     if (typeof ms.setPositionState !== 'function') return;
-    const dur = Number.isFinite(audio_el.duration) ? audio_el.duration : 0;
+    const dur = safe_duration(audio_el);
     try {
       ms.setPositionState({
         duration: dur,

@@ -30,12 +30,10 @@
   let passage_el = $state<HTMLElement | undefined>(undefined);
   let playback = $state<PlaybackController | null>(null);
   let hover_sentence = $state(-1);
-  let resize_tick = $state(0);
-  let overlay_w = $state(0);
-  let overlay_h = $state(0);
-  let rects_hover = $state<RectLike[]>([]);
-  let rects_active = $state<RectLike[]>([]);
-  let rects_word = $state<RectLike[]>([]);
+  let passage_rect = $state({ left: 0, top: 0, width: 0, height: 0 });
+  const overlay_w = $derived(passage_rect.width + BLEED * 2);
+  const overlay_h = $derived(passage_rect.height + BLEED * 2);
+  const origin = $derived({ x: passage_rect.left, y: passage_rect.top });
 
   onMount(() => logger.event('route.mounted', { route: '/' }));
 
@@ -49,7 +47,11 @@
     });
     playback = p;
 
-    const observer = new ResizeObserver(() => resize_tick++);
+    const observer = new ResizeObserver(() => {
+      if (!passage_el) return;
+      const r = passage_el.getBoundingClientRect();
+      passage_rect = { left: r.left, top: r.top, width: r.width, height: r.height };
+    });
     observer.observe(passage_el);
 
     const on_err = (e: ErrorEvent) =>
@@ -101,20 +103,28 @@
     return first instanceof Text ? first : null;
   }
 
-  $effect(() => {
-    resize_tick;
+  const rects_hover = $derived.by<RectLike[]>(() => {
     const tn = passage_el && text_node();
-    if (!passage_el || !tn || !playback) return;
-    const wrap = passage_el.getBoundingClientRect();
-    const origin = { x: wrap.left, y: wrap.top };
-    const sentence_rects = (i: number) =>
-      i >= 0 ? get_local_line_rects(tn, data.sentences[i].start, data.sentences[i].end, origin) : [];
-    overlay_w = wrap.width + BLEED * 2;
-    overlay_h = wrap.height + BLEED * 2;
-    rects_hover = sentence_rects(hover_sentence);
-    rects_active = sentence_rects(playback.active_sentence_index);
+    if (!tn || hover_sentence < 0) return [];
+    const s = data.sentences[hover_sentence];
+    return get_local_line_rects(tn, s.start, s.end, origin);
+  });
+
+  const rects_active = $derived.by<RectLike[]>(() => {
+    const tn = passage_el && text_node();
+    if (!tn || !playback) return [];
+    const i = playback.active_sentence_index;
+    if (i < 0) return [];
+    const s = data.sentences[i];
+    return get_local_line_rects(tn, s.start, s.end, origin);
+  });
+
+  const rects_word = $derived.by<RectLike[]>(() => {
+    const tn = passage_el && text_node();
+    if (!tn || !playback) return [];
     const wr = data.ranges[playback.word_index];
-    rects_word = wr ? get_local_line_rects(tn, wr[0], wr[1], origin) : [];
+    if (!wr) return [];
+    return get_local_line_rects(tn, wr[0], wr[1], origin);
   });
 
   function fmt(t: number): string {
@@ -136,13 +146,9 @@
   function sentence_at(e: MouseEvent): number {
     const tn = text_node();
     if (!tn) return -1;
-    const pos = document.caretPositionFromPoint?.(e.clientX, e.clientY)
-      ?? document.caretRangeFromPoint?.(e.clientX, e.clientY);
-    if (!pos) return -1;
-    const node = 'offsetNode' in pos ? pos.offsetNode : pos.startContainer;
-    const offset = 'offset' in pos ? pos.offset : pos.startOffset;
-    if (node !== tn) return -1;
-    return find_sentence_index_by_offset(data.sentences, offset);
+    const pos = document.caretPositionFromPoint(e.clientX, e.clientY);
+    if (!pos || pos.offsetNode !== tn) return -1;
+    return find_sentence_index_by_offset(data.sentences, pos.offset);
   }
 
   function on_passage_click(e: MouseEvent): void {

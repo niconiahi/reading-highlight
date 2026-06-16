@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
-import { get_logger, logger, set_logger } from './index';
-import { create_recording_logger } from '$testing';
+import { logger, set_logger } from './index';
+import { create_recording_logger } from '$testing/recording_logger';
 
 describe('telemetry singleton logger', () => {
   beforeEach(() => {
@@ -11,8 +11,8 @@ describe('telemetry singleton logger', () => {
     set_logger({ event: () => {} });
   });
 
-  test('default get_logger returns a logger whose event() never throws', () => {
-    expect(() => get_logger().event('any.event', { a: 1, b: 'two', c: true }))
+  test('default logger.event never throws', () => {
+    expect(() => logger.event('any.event', { a: 1, b: 'two', c: true }))
       .not.toThrow();
   });
 

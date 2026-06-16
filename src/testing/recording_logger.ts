@@ -1,14 +1,7 @@
 import type { Logger, LogPayload } from '$lib/telemetry';
 
-export type RecordedEvent = { name: string; payload: LogPayload };
-
-export function create_recording_logger(): {
-  logger: Logger;
-  events: RecordedEvent[];
-} {
-  const events: RecordedEvent[] = [];
-  return {
-    events,
-    logger: { event: (name, payload) => events.push({ name, payload }) },
-  };
+export function create_recording_logger() {
+  const events: { name: string; payload: LogPayload }[] = [];
+  const logger: Logger = { event: (name, payload) => { events.push({ name, payload }); } };
+  return { logger, events };
 }

@@ -4,20 +4,8 @@ export type Logger = {
   event: (name: string, payload: LogPayload) => void;
 };
 
-const no_op_logger: Logger = {
-  event: () => {},
-};
-
-let current_logger: Logger = no_op_logger;
+export const logger: Logger = { event: () => {} };
 
 export function set_logger(impl: Logger): void {
-  current_logger = impl;
+  logger.event = impl.event;
 }
-
-export function get_logger(): Logger {
-  return current_logger;
-}
-
-export const logger: Logger = {
-  event: (name, payload) => current_logger.event(name, payload),
-};

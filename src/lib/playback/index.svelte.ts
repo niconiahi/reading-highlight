@@ -6,40 +6,25 @@ import {
   type SentenceRange,
 } from '$lib/tokenizer';
 
-export type PlaybackWordTiming = { start: number };
-
-export type PlaybackOptions = {
-  timings: readonly PlaybackWordTiming[];
-  sentences: readonly SentenceRange[];
-  title: string;
-  artist: string;
-};
-
-export type PlaybackController = {
-  toggle_play: () => void;
-  seek: (time_seconds: number, source?: string) => void;
-  seek_to_word: (word_index: number, source?: string) => void;
-  skip: (delta_seconds: number, source?: string) => void;
-  cycle_rate: () => void;
-  set_rate: (value: number) => void;
-  readonly playing: boolean;
-  readonly current_time: number;
-  readonly duration: number;
-  readonly rate: number;
-  readonly word_index: number;
-  readonly active_sentence_index: number;
-  teardown: () => void;
-};
-
 const RATES: readonly number[] = [0.75, 1, 1.25, 1.5, 2];
+
+const safe_duration = (el: HTMLAudioElement) =>
+  Number.isFinite(el.duration) ? el.duration : 0;
+
+export type PlaybackController = ReturnType<typeof create_playback>;
 
 export function create_playback(
   audio_el: HTMLAudioElement,
-  { timings, sentences, title, artist }: PlaybackOptions,
-): PlaybackController {
+  { timings, sentences, title, artist }: {
+    timings: readonly { start: number }[];
+    sentences: readonly SentenceRange[];
+    title: string;
+    artist: string;
+  },
+) {
   let playing = $state(!audio_el.paused);
   let current_time = $state(audio_el.currentTime);
-  let duration = $state(Number.isFinite(audio_el.duration) ? audio_el.duration : 0);
+  let duration = $state(safe_duration(audio_el));
   let rate = $state(1);
   let word_index = $state(0);
   let seek_count = 0;
@@ -58,7 +43,7 @@ export function create_playback(
   };
   const on_pause = () => (playing = false);
   const on_metadata = () => {
-    duration = Number.isFinite(audio_el.duration) ? audio_el.duration : 0;
+    duration = safe_duration(audio_el);
   };
   const on_ended = () => logger.event('audio.ended', { duration });
   const on_error = () => {
@@ -94,7 +79,7 @@ export function create_playback(
   }
 
   function seek(time_seconds: number, source: string = 'api'): void {
-    const dur = Number.isFinite(audio_el.duration) ? audio_el.duration : 0;
+    const dur = safe_duration(audio_el);
     const upper = dur > 0 ? Math.min(dur, time_seconds) : time_seconds;
     const from = audio_el.currentTime;
     const to = Math.max(0, upper);
@@ -146,7 +131,7 @@ export function create_playback(
   });
 
   function session_summary(): void {
-    const dur = Number.isFinite(audio_el.duration) ? audio_el.duration : 0;
+    const dur = safe_duration(audio_el);
     logger.event('playback.session_summary', {
       max_position,
       seek_count,

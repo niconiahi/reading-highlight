@@ -1,9 +1,7 @@
-export type KeybindingHandlers = {
+export function attach_keybindings(handlers: {
   on_toggle_play: () => void;
   on_skip: (delta_seconds: number) => void;
-};
-
-export function attach_keybindings(handlers: KeybindingHandlers): () => void {
+}): () => void {
   const on_key = (e: KeyboardEvent) => {
     const t = e.target as HTMLElement | null;
     if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
