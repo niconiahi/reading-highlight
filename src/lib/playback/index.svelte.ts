@@ -26,6 +26,8 @@ export function create_playback(
   let current_time = $state(audio_el.currentTime);
   let duration = $state(safe_duration(audio_el));
   let rate = $state(1);
+  let muted = $state(audio_el.muted);
+  let volume = $state(audio_el.volume);
   let word_index = $state(0);
   let seek_count = 0;
   let max_position = 0;
@@ -52,6 +54,10 @@ export function create_playback(
   };
   const on_waiting = () => logger.event('audio.waiting', { at: audio_el.currentTime });
   const on_canplaythrough = () => logger.event('audio.canplaythrough', { duration });
+  const on_volumechange = () => {
+    muted = audio_el.muted;
+    volume = audio_el.volume;
+  };
   audio_el.addEventListener('play', on_play);
   audio_el.addEventListener('pause', on_pause);
   audio_el.addEventListener('loadedmetadata', on_metadata);
@@ -59,6 +65,7 @@ export function create_playback(
   audio_el.addEventListener('error', on_error);
   audio_el.addEventListener('waiting', on_waiting);
   audio_el.addEventListener('canplaythrough', on_canplaythrough);
+  audio_el.addEventListener('volumechange', on_volumechange);
 
   let raf = 0;
   const tick = () => {
@@ -151,6 +158,7 @@ export function create_playback(
     audio_el.removeEventListener('error', on_error);
     audio_el.removeEventListener('waiting', on_waiting);
     audio_el.removeEventListener('canplaythrough', on_canplaythrough);
+    audio_el.removeEventListener('volumechange', on_volumechange);
   }
 
   return {
@@ -165,6 +173,7 @@ export function create_playback(
     get duration() { return duration; },
     get rate() { return rate; },
     get word_index() { return word_index; },
+    get audible() { return playing && !muted && volume > 0; },
     get active_sentence_index() {
       return find_sentence_index_by_word(sentences as SentenceRange[], word_index);
     },

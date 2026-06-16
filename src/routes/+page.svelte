@@ -199,7 +199,9 @@
     </div>
 
     <span class="sr-only" aria-live="polite">
-      {data.ranges.length && playback ? data.text.slice(data.ranges[playback.word_index][0], data.ranges[playback.word_index][1]) : ''}
+      {!playback || playback.audible || !data.ranges.length
+        ? ''
+        : data.text.slice(data.ranges[playback.word_index][0], data.ranges[playback.word_index][1])}
     </span>
   </article>
 
