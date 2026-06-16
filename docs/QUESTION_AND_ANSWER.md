@@ -77,7 +77,7 @@ muscle memory.
 type Entry<V> = { value: V; expires_at: number };
 
 export class LruCache<K, V> {
-  private map = new Map<K, Entry<V>>(); // insertion-ordered, that's the whole trick
+  private map = new Map<K, Entry<V>>();
 
   constructor(
     private capacity: number,
@@ -92,28 +92,18 @@ export class LruCache<K, V> {
       this.map.delete(key);
       return undefined;
     }
-    // recency: re-insert to move to the tail (most recent)
     this.map.delete(key);
     this.map.set(key, entry);
     return entry.value;
   }
 
   set(key: K, value: V): void {
-    if (this.map.has(key)) this.map.delete(key);
+    this.map.delete(key);
     this.map.set(key, { value, expires_at: this.now() + this.ttl_ms });
     if (this.map.size > this.capacity) {
-      // evict least-recently-used = oldest insertion
       const oldest = this.map.keys().next().value;
       if (oldest !== undefined) this.map.delete(oldest);
     }
-  }
-
-  has(key: K): boolean {
-    return this.get(key) !== undefined; // funnel through get so TTL eviction runs
-  }
-
-  delete(key: K): boolean {
-    return this.map.delete(key);
   }
 }
 ```
@@ -156,9 +146,9 @@ export type SsmlNode =
 export function parse_ssml(input: string): SsmlNode {
   let i = 0;
   const root: SsmlNode = { type: "element", name: "#root", attrs: {}, children: [] };
-  const stack: SsmlNode[] = [root];
+  const stack: Extract<SsmlNode, { type: "element" }>[] = [root];
 
-  const peek = (n = 0) => input[i + n];
+  const peek = () => input[i];
   const eat = (s: string) => {
     if (input.slice(i, i + s.length) !== s) throw new Error(`expected ${s} at ${i}`);
     i += s.length;
@@ -195,7 +185,7 @@ export function parse_ssml(input: string): SsmlNode {
         i = end < 0 ? input.length : end + 3;
         continue;
       }
-      if (peek(1) === "/") {
+      if (input[i + 1] === "/") {
         i += 2;
         const name = read_name();
         skip_ws(); eat(">");
@@ -213,30 +203,25 @@ export function parse_ssml(input: string): SsmlNode {
       if (self_closing) i++;
       eat(">");
       const node: SsmlNode = { type: "element", name, attrs, children: [] };
-      (stack[stack.length - 1] as Extract<SsmlNode, { type: "element" }>).children.push(node);
+      stack.at(-1)!.children.push(node);
       if (!self_closing) stack.push(node);
     } else {
       const start = i;
       while (i < input.length && input[i] !== "<") i++;
       const text = decode_entities(input.slice(start, i));
       if (text) {
-        (stack[stack.length - 1] as Extract<SsmlNode, { type: "element" }>)
-          .children.push({ type: "text", value: text });
+        stack.at(-1)!.children.push({ type: "text", value: text });
       }
     }
   }
 
   if (stack.length !== 1) throw new Error("unclosed elements");
-  // unwrap #root if there's exactly one element child
-  const kids = (root as Extract<SsmlNode, { type: "element" }>).children;
-  return kids.length === 1 && kids[0].type === "element" ? kids[0] : root;
+  return root;
 }
 
 function decode_entities(s: string): string {
-  return s
-    .replace(/&lt;/g, "<").replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"').replace(/&apos;/g, "'")
-    .replace(/&amp;/g, "&"); // amp last so we don't re-decode
+  const map: Record<string, string> = { lt: "<", gt: ">", quot: '"', apos: "'", amp: "&" };
+  return s.replace(/&(lt|gt|quot|apos|amp);/g, (_, e) => map[e]);
 }
 ```
 
@@ -253,7 +238,8 @@ export function serialize_ssml(node: SsmlNode): string {
 }
 
 function encode_entities(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const map: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" };
+  return s.replace(/[&<>"]/g, (c) => map[c]);
 }
 ```
 
@@ -375,17 +361,7 @@ startOffset, endContainer, endOffset}` span inside the DOM.
 covers, in viewport pixel coordinates. That's what lets you draw a
 highlight without wrapping the text in `<span>`s.
 
-```ts
-function first_line_height(el: HTMLElement): number {
-  const text = el.firstChild;
-  if (!text || text.nodeType !== Node.TEXT_NODE) return 0;
-  const range = document.createRange();
-  range.setStart(text, 0);
-  range.setEnd(text, text.textContent!.length);
-  const rects = range.getClientRects();
-  return rects.length ? rects[0].height : 0;
-}
-```
+Implementation in Q3 (`firstLineHeight`). Same shape, with the `TreeWalker` fix for nested inlines.
 
 Probes:
 - "What if there's a nested `<strong>` in the paragraph?" — walk to the
@@ -588,20 +564,7 @@ The JD names it as DSA + Frontend foundations. Drill these:
   most N async tasks at a time and parks the rest until a slot frees
   up. One reviewer. Worth memorizing:
 
-```ts
-function pqueue<T>(limit: number) {
-  let active = 0;
-  const waiters: (() => void)[] = [];
-  const acquire = () => new Promise<void>((res) => {
-    if (active < limit) { active++; res(); } else waiters.push(() => { active++; res(); });
-  });
-  const release = () => { active--; waiters.shift()?.(); };
-  return async (fn: () => Promise<T>) => {
-    await acquire();
-    try { return await fn(); } finally { release(); }
-  };
-}
-```
+See §8 Q15 for the implementation.
 
 - **Event-loop / microtasks** — JS runs one **task** at a time (a
   macrotask: a `setTimeout` callback, an event handler, etc.).
@@ -809,22 +772,7 @@ See §4.2. Mozilla Readability-style heuristic. Length, comma count,
 paragraph count, link density, class/id regex. Collapse
 ancestor/descendant duplicates. Cap at top-N.
 
-```ts
-function readable(root: HTMLElement = document.body): HTMLElement[] {
-  const score = (el: HTMLElement) => {
-    const txt = (el.textContent ?? "").trim();
-    if (txt.length < 140) return -1;
-    const links = [...el.querySelectorAll("a")].reduce((s, a) => s + (a.textContent?.length ?? 0), 0);
-    if (links / txt.length > 0.5) return -1;
-    return txt.length / 100 + el.querySelectorAll("p").length * 3 + (txt.match(/,/g)?.length ?? 0);
-  };
-  const ranked = [...root.querySelectorAll<HTMLElement>("article,main,section,div,p")]
-    .map((el) => ({ el, s: score(el) })).filter((x) => x.s > 0).sort((a, b) => b.s - a.s);
-  const out: HTMLElement[] = [];
-  for (const { el } of ranked) if (!out.some((p) => p.contains(el) || el.contains(p))) out.push(el);
-  return out.slice(0, 5);
-}
-```
+Full implementation in §4.2 (`find_readable_roots`) — TreeWalker + NEGATIVE/POSITIVE class regex + ancestor/descendant collapse.
 
 ### Q5. "Sync a highlight with audio playback."
 Candidate's §2 of `LEARN.md`. `<audio>` + `rAF` (`requestAnimationFrame`,
@@ -884,11 +832,8 @@ function paintHighlight(text: Text, start: number, end: number, svg: SVGSVGEleme
   svg.replaceChildren();
   for (const rect of r.getClientRects()) {
     const el = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    el.setAttribute("x", String(rect.x - host.x));
-    el.setAttribute("y", String(rect.y - host.y));
-    el.setAttribute("width", String(rect.width));
-    el.setAttribute("height", String(rect.height));
-    el.setAttribute("rx", "2"); el.setAttribute("fill", "yellow");
+    const attrs = { x: rect.x - host.x, y: rect.y - host.y, width: rect.width, height: rect.height, rx: 2, fill: "yellow" };
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
     svg.appendChild(el);
   }
 }
@@ -1010,13 +955,13 @@ already memorized.
 
 ```ts
 function lastIndexLE(words: { start: number }[], t: number): number {
-  let lo = 0, hi = words.length; // half-open
+  let lo = 0, hi = words.length;
   while (lo < hi) {
     const mid = (lo + hi) >>> 1;
     if (words[mid].start <= t) lo = mid + 1;
     else hi = mid;
   }
-  return lo - 1; // -1 means "before first word"
+  return lo - 1;
 }
 ```
 
@@ -1027,12 +972,16 @@ user-provided async fn.
 ```ts
 function queue(limit: number) {
   let active = 0;
-  const waiters: (() => void)[] = [];
-  const next = () => { active--; waiters.shift()?.(); };
+  const waiters: PromiseWithResolvers<void>[] = [];
   return async <T>(fn: () => Promise<T>): Promise<T> => {
-    if (active >= limit) await new Promise<void>((r) => waiters.push(r));
+    if (active >= limit) {
+      const w = Promise.withResolvers<void>();
+      waiters.push(w);
+      await w.promise;
+    }
     active++;
-    try { return await fn(); } finally { next(); }
+    try { return await fn(); }
+    finally { active--; waiters.shift()?.resolve(); }
   };
 }
 const run = queue(3);
@@ -1117,10 +1066,10 @@ mutates layout/paint.
 
 ```ts
 console.log("sync");
-queueMicrotask(() => console.log("micro"));   // 2: drains before any task
-setTimeout(() => console.log("timeout"), 0);  // 4: next macrotask
-requestAnimationFrame(() => console.log("raf")); // 3: before next paint
-Promise.resolve().then(() => console.log("then")); // 2': also micro
+queueMicrotask(() => console.log("micro"));
+setTimeout(() => console.log("timeout"), 0);
+requestAnimationFrame(() => console.log("raf"));
+Promise.resolve().then(() => console.log("then"));
 // order: sync, micro, then, raf, timeout
 ```
 
