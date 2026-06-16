@@ -626,309 +626,309 @@ shape for "did the user actually engage with this document."
 ### The core five
 
 **"How would you implement the highlight?"**
-> The constraint I started from: the prose has to stay a single
-> text node — reader mode, screen readers, and Select-All all need
-> it intact. So wrapping each word in a `<span>` is off the table.
->
-> The trick is `Range.getClientRects()`. Make a Range over a slice
-> of the text, ask the browser for the bounding rects, paint them
-> in a sibling `aria-hidden` SVG behind the text. `<rect>` elements
-> with `rx`/`ry` for rounded pills. The original text node is never
-> touched.
->
-> Happy to dig into the SVG-vs-divs choice, how I re-measure on
-> reflow, or why I skipped the CSS Custom Highlight API.
+The constraint I started from: the prose has to stay a single
+text node — reader mode, screen readers, and Select-All all need
+it intact. So wrapping each word in a `<span>` is off the table.
+
+The trick is `Range.getClientRects()`. Make a Range over a slice
+of the text, ask the browser for the bounding rects, paint them
+in a sibling `aria-hidden` SVG behind the text. `<rect>` elements
+with `rx`/`ry` for rounded pills. The original text node is never
+touched.
+
+Happy to dig into the SVG-vs-divs choice, how I re-measure on
+reflow, or why I skipped the CSS Custom Highlight API.
 
 **"How do you keep the highlight in sync with audio?"**
-> The naive instinct is to listen for `timeupdate` on the audio
-> element. But it fires maybe four times a second — well below the
-> rate of normal speech, so the highlight visibly trails the voice.
->
-> So instead I run a `requestAnimationFrame` loop. Each frame: read
-> `audio.currentTime`, find the last word whose `start` ≤ that time,
-> update the index. `rAF` matches the display refresh, pauses in
-> background tabs, and makes the highlight feel like it *is* the
-> audio rather than chasing it.
->
-> The "last word whose start ≤ t" semantics has a couple of nice
-> properties — I can go into why that's the right comparison rather
-> than `start ≤ t < end`, or talk about how this scales for longer
-> documents.
+The naive instinct is to listen for `timeupdate` on the audio
+element. But it fires maybe four times a second — well below the
+rate of normal speech, so the highlight visibly trails the voice.
+
+So instead I run a `requestAnimationFrame` loop. Each frame: read
+`audio.currentTime`, find the last word whose `start` ≤ that time,
+update the index. `rAF` matches the display refresh, pauses in
+background tabs, and makes the highlight feel like it *is* the
+audio rather than chasing it.
+
+The "last word whose start ≤ t" semantics has a couple of nice
+properties — I can go into why that's the right comparison rather
+than `start ≤ t < end`, or talk about how this scales for longer
+documents.
 
 **"How would you implement click-to-seek?"**
-> First decision: sentence granularity, not word. A single word is
-> too small a touch target — you'd miss-tap constantly. Sentences
-> are big, finger-friendly, and they match how people think about
-> "where I want to be" in prose.
->
-> Then it's `document.caretPositionFromPoint(x, y)` — give it
-> screen coordinates, it hands back the text node and character
-> offset under the cursor. I confirm the hit is actually the prose
-> (not the overlay or some padding), map that offset to a sentence
-> index, and set `audio.currentTime` to the start of that sentence's
-> first word. The rAF sync loop catches up on the next frame; I
-> don't have to touch the highlight myself.
->
-> Can go deeper on the caret API itself, or how I handle clicks
-> that land between two words.
+First decision: sentence granularity, not word. A single word is
+too small a touch target — you'd miss-tap constantly. Sentences
+are big, finger-friendly, and they match how people think about
+"where I want to be" in prose.
+
+Then it's `document.caretPositionFromPoint(x, y)` — give it
+screen coordinates, it hands back the text node and character
+offset under the cursor. I confirm the hit is actually the prose
+(not the overlay or some padding), map that offset to a sentence
+index, and set `audio.currentTime` to the start of that sentence's
+first word. The rAF sync loop catches up on the next frame; I
+don't have to touch the highlight myself.
+
+Can go deeper on the caret API itself, or how I handle clicks
+that land between two words.
 
 **"What about lock-screen / hardware media keys?"**
-> The Media Session API. You register handlers on
-> `navigator.mediaSession` for play, pause, seek-forward,
-> seek-backward, previous-track, next-track. The OS then surfaces
-> those in its native control — lock screen, notification,
-> Bluetooth headset, smartwatch — and routes the user's button
-> presses back to your handlers.
->
-> The interesting bit is "previous track" and "next track." For a
-> podcast those mean "previous episode." For a reader, the
-> intuition is "previous sentence." So I rebind them to sentence
-> stepping instead of episode skipping. `MediaMetadata` controls
-> the label on the lock screen; `setPositionState` keeps the OS's
-> scrub bar in sync with where playback actually is.
->
-> Happy to go into `setPositionState` specifically — its support
-> story and why it needs a `try/catch`.
+The Media Session API. You register handlers on
+`navigator.mediaSession` for play, pause, seek-forward,
+seek-backward, previous-track, next-track. The OS then surfaces
+those in its native control — lock screen, notification,
+Bluetooth headset, smartwatch — and routes the user's button
+presses back to your handlers.
+
+The interesting bit is "previous track" and "next track." For a
+podcast those mean "previous episode." For a reader, the
+intuition is "previous sentence." So I rebind them to sentence
+stepping instead of episode skipping. `MediaMetadata` controls
+the label on the lock screen; `setPositionState` keeps the OS's
+scrub bar in sync with where playback actually is.
+
+Happy to go into `setPositionState` specifically — its support
+story and why it needs a `try/catch`.
 
 **"How do you handle accessibility?"**
-> The big realisation: the audio narration *is* the accessibility
-> story for the prose. A screen-reader user can hear the
-> recording — so I don't want the screen reader to ALSO announce
-> every word. That's a duplicate voice.
->
-> Concretely: the highlight overlay is `aria-hidden` with
-> `pointer-events: none`, so assistive tech only sees the
-> underlying prose, and clicks land on the text node rather than
-> the SVG. There's a single `aria-live` region that announces the
-> current word, but it only fires when the audio isn't audible —
-> paused, muted, or volume zero. One voice at a time.
->
-> The rest is just semantic HTML: `<blockquote cite>` for the
-> passage, `<time datetime>` for elapsed time, `<input type="range">`
-> for the scrubber, `aria-label` on icon buttons. Happy to walk
-> through any of those, or the `sr-only` pattern specifically.
+The big realisation: the audio narration *is* the accessibility
+story for the prose. A screen-reader user can hear the
+recording — so I don't want the screen reader to ALSO announce
+every word. That's a duplicate voice.
+
+Concretely: the highlight overlay is `aria-hidden` with
+`pointer-events: none`, so assistive tech only sees the
+underlying prose, and clicks land on the text node rather than
+the SVG. There's a single `aria-live` region that announces the
+current word, but it only fires when the audio isn't audible —
+paused, muted, or volume zero. One voice at a time.
+
+The rest is just semantic HTML: `<blockquote cite>` for the
+passage, `<time datetime>` for elapsed time, `<input type="range">`
+for the scrubber, `aria-label` on icon buttons. Happy to walk
+through any of those, or the `sr-only` pattern specifically.
 
 ### Sync and timing
 
 **"Why not `timeupdate`?"**
-> Spec gives no minimum firing rate. Browsers ship ~4×/sec
-> (Chrome, Firefox) to ~15×/sec (Safari). Below the word rate of
-> normal speech, so the highlight visibly trails. `rAF` matches
-> the display refresh, pauses in background tabs, and aligns with
-> the compositor.
+Spec gives no minimum firing rate. Browsers ship ~4×/sec
+(Chrome, Firefox) to ~15×/sec (Safari). Below the word rate of
+normal speech, so the highlight visibly trails. `rAF` matches
+the display refresh, pauses in background tabs, and aligns with
+the compositor.
 
 **"Why `findLastIndex`, not a forward pointer?"**
-> A forward pointer is faster per-frame but breaks on scrubs.
-> Every seek (drag, click-to-seek, keyboard skip) forces you to
-> reset and re-walk. `findLastIndex` is correct under arbitrary
-> seeking. The win on the pointer is illusory; you're optimising
-> the wrong axis. For very long documents, swap the linear scan
-> for binary search — same semantics, `O(log n)`.
+A forward pointer is faster per-frame but breaks on scrubs.
+Every seek (drag, click-to-seek, keyboard skip) forces you to
+reset and re-walk. `findLastIndex` is correct under arbitrary
+seeking. The win on the pointer is illusory; you're optimising
+the wrong axis. For very long documents, swap the linear scan
+for binary search — same semantics, `O(log n)`.
 
 **"Why `start ≤ t` and not `start ≤ t < end`?"**
-> Speech has silences between words — punctuation pauses, breath
-> pauses, sentence ends. `start ≤ t < end` makes the highlight
-> blink off during every silence. `start ≤ t` (the largest such
-> index) keeps it on the last word spoken, which is what a reader
-> wants. Bonus: a short word can't be skipped by a frame landing
-> in a 5 ms gap, because the search resolves to the most recent
-> start.
+Speech has silences between words — punctuation pauses, breath
+pauses, sentence ends. `start ≤ t < end` makes the highlight
+blink off during every silence. `start ≤ t` (the largest such
+index) keeps it on the last word spoken, which is what a reader
+wants. Bonus: a short word can't be skipped by a frame landing
+in a 5 ms gap, because the search resolves to the most recent
+start.
 
 **"The highlight feels a bit late. What do you do?"**
-> Subtract a constant offset (60–100 ms) from `t` before the
-> search to compensate for audio output latency. Bias *early* —
-> leading the voice by a frame reads as in-sync; trailing reads
-> as broken. If the lag is proportional rather than constant,
-> your timing source is wrong; fix the data, not the highlight.
+Subtract a constant offset (60–100 ms) from `t` before the
+search to compensate for audio output latency. Bias *early* —
+leading the voice by a frame reads as in-sync; trailing reads
+as broken. If the lag is proportional rather than constant,
+your timing source is wrong; fix the data, not the highlight.
 
 ### Highlight rendering
 
 **"Why `Range.getClientRects` instead of wrapping every word in a
 span?"**
-> The instinct is to wrap each word: `<span>Abou</span> <span>Ben</span>
-> <span>Adhem</span>…`. It works for highlighting, but it destroys
-> the prose. A 200-word paragraph becomes 200+ empty spans —
-> reader-mode extractors, AT crawlers, even plain Select-All now
-> see markup instead of text.
->
-> `Range.getClientRects()` lets you ask the browser "where would
-> this slice of the text node be painted?" without modifying the
-> DOM at all. The text stays a single
-> `<blockquote>The text…</blockquote>`, and the highlight lives in
-> a sibling `aria-hidden` SVG layer the prose doesn't know about.
+The instinct is to wrap each word: `<span>Abou</span> <span>Ben</span>
+<span>Adhem</span>…`. It works for highlighting, but it destroys
+the prose. A 200-word paragraph becomes 200+ empty spans —
+reader-mode extractors, AT crawlers, even plain Select-All now
+see markup instead of text.
+
+`Range.getClientRects()` lets you ask the browser "where would
+this slice of the text node be painted?" without modifying the
+DOM at all. The text stays a single
+`<blockquote>The text…</blockquote>`, and the highlight lives in
+a sibling `aria-hidden` SVG layer the prose doesn't know about.
 
 **"Why SVG over absolute-positioned `<div>`s?"**
-> One SVG node with many `<rect>` children composites more cleanly
-> than N positioned divs, and `rx`/`ry` give per-corner rounding
-> without per-element CSS. The semantics are identical — both are
-> a sibling layer behind the prose — but the SVG is a smaller,
-> denser representation.
+One SVG node with many `<rect>` children composites more cleanly
+than N positioned divs, and `rx`/`ry` give per-corner rounding
+without per-element CSS. The semantics are identical — both are
+a sibling layer behind the prose — but the SVG is a smaller,
+denser representation.
 
 **"Why not the CSS Custom Highlight API?"**
-> Flat rectangles only. The API restricts you to `color`,
-> `background-color`, `text-decoration` and friends, `text-shadow`,
-> and `-webkit-text-stroke-*`. No `border-radius`, no padding, no
-> transforms. The home page wants rounded pills, so it can't use
-> the API. If the design were flat color (search hits, current
-> line), the Highlight API would be the right call — zero DOM
-> nodes is the cleanest possible story.
+Flat rectangles only. The API restricts you to `color`,
+`background-color`, `text-decoration` and friends, `text-shadow`,
+and `-webkit-text-stroke-*`. No `border-radius`, no padding, no
+transforms. The home page wants rounded pills, so it can't use
+the API. If the design were flat color (search hits, current
+line), the Highlight API would be the right call — zero DOM
+nodes is the cleanest possible story.
 
 **"`Range.getClientRects()` — what's the gotcha?"**
-> Two gotchas, both about coordinates and freshness.
->
-> First, the coordinates are viewport-relative. If your overlay
-> is positioned inside a wrapper, you have to subtract that
-> wrapper's bounding rect from every glyph rect to translate into
-> the overlay's local space. Easy to forget on the first pass;
-> shows up as the highlight appearing offset by some scroll
-> amount.
->
-> Second, the rects go stale on anything that changes layout —
-> viewport resize, font load, content change, ancestor width
-> shifts. A `ResizeObserver` on the passage wrapper catches all
-> of those at once; it fires on internal layout shifts, not just
-> viewport changes. Write the new rect into reactive state and
-> let derived consumers re-run on their own. No manual
-> invalidation, no tick counters.
+Two gotchas, both about coordinates and freshness.
+
+First, the coordinates are viewport-relative. If your overlay
+is positioned inside a wrapper, you have to subtract that
+wrapper's bounding rect from every glyph rect to translate into
+the overlay's local space. Easy to forget on the first pass;
+shows up as the highlight appearing offset by some scroll
+amount.
+
+Second, the rects go stale on anything that changes layout —
+viewport resize, font load, content change, ancestor width
+shifts. A `ResizeObserver` on the passage wrapper catches all
+of those at once; it fires on internal layout shifts, not just
+viewport changes. Write the new rect into reactive state and
+let derived consumers re-run on their own. No manual
+invalidation, no tick counters.
 
 ### Click and hit-testing
 
 **"User clicked between two words. What happens?"**
-> The browser doesn't care about word boundaries —
-> `caretPositionFromPoint` just hands back the nearest text
-> offset. A click in a gap returns whichever character offset is
-> closest, typically the start of the next word.
->
-> From there, `find_sentence_index_by_offset` walks the sentence
-> spans and answers "which span contains this offset, or — if
-> we're in a gap — the previous one." That fallback is the point:
-> clicks on whitespace shouldn't fall off the end. Then I seek to
-> that sentence's first word.
->
-> The check I always remember to do: confirm the hit node is
-> actually the passage's text node. Clicks on the overlay,
-> scrollbar, or padding shouldn't trigger a seek.
+The browser doesn't care about word boundaries —
+`caretPositionFromPoint` just hands back the nearest text
+offset. A click in a gap returns whichever character offset is
+closest, typically the start of the next word.
+
+From there, `find_sentence_index_by_offset` walks the sentence
+spans and answers "which span contains this offset, or — if
+we're in a gap — the previous one." That fallback is the point:
+clicks on whitespace shouldn't fall off the end. Then I seek to
+that sentence's first word.
+
+The check I always remember to do: confirm the hit node is
+actually the passage's text node. Clicks on the overlay,
+scrollbar, or padding shouldn't trigger a seek.
 
 ### Persistence
 
 **"When do you write `localStorage`?"**
-> On `pagehide`, not every tick. `localStorage` is synchronous
-> and blocks the main thread; writing on every frame tanks the
-> sync loop. `pagehide` is the right event because it fires on
-> tab close, navigation, *and* bfcache entry — `beforeunload`
-> doesn't fire reliably on mobile Safari. Wrapped in
-> `try/catch` so disabled storage doesn't break the page.
+On `pagehide`, not every tick. `localStorage` is synchronous
+and blocks the main thread; writing on every frame tanks the
+sync loop. `pagehide` is the right event because it fires on
+tab close, navigation, *and* bfcache entry — `beforeunload`
+doesn't fire reliably on mobile Safari. Wrapped in
+`try/catch` so disabled storage doesn't break the page.
 
 **"Why not IndexedDB?"**
-> Two strings — position and rate — don't justify it.
-> `localStorage` is the right tool for small synchronous
-> key-value state. IndexedDB earns its complexity for blobs
-> (cached audio, downloaded utterances) and structured app
-> state (timings JSON per document, bookmarks). The home page
-> needs neither.
+Two strings — position and rate — don't justify it.
+`localStorage` is the right tool for small synchronous
+key-value state. IndexedDB earns its complexity for blobs
+(cached audio, downloaded utterances) and structured app
+state (timings JSON per document, bookmarks). The home page
+needs neither.
 
 ### Media Session
 
 **"Why rebind previoustrack to previous sentence?"**
-> Hardware media keys map to "previous track" by convention,
-> but in a reader the unit the user thinks in is the sentence,
-> not the track. ±10s is what the seek keys are for. Mapping
-> prev/next track to sentence ±1 turns a single Bluetooth
-> headset button into a native "step through the prose"
-> control — the kind of integration that's invisible until
-> someone hands you headphones with one button.
+Hardware media keys map to "previous track" by convention,
+but in a reader the unit the user thinks in is the sentence,
+not the track. ±10s is what the seek keys are for. Mapping
+prev/next track to sentence ±1 turns a single Bluetooth
+headset button into a native "step through the prose"
+control — the kind of integration that's invisible until
+someone hands you headphones with one button.
 
 **"What if `mediaSession` is unavailable?"**
-> Return a no-op controller from `attach_media_session`. The
-> rest of the page is unaffected; the OS-level integration
-> just isn't there. Graceful degradation, no feature
-> detection at the call site.
+Return a no-op controller from `attach_media_session`. The
+rest of the page is unaffected; the OS-level integration
+just isn't there. Graceful degradation, no feature
+detection at the call site.
 
 ### Accessibility
 
 **"Why is there an `aria-live` announcing the current word?"**
-> Because the audio recording is the primary accessibility story,
-> but only when the user is actually hearing it. If they've
-> paused, muted, or dropped the volume to zero, the screen reader
-> becomes the only voice — and without a live region, they get no
-> signal at all about where in the prose playback is.
->
-> So there's one `aria-live="polite"` region that announces the
-> current word, gated on `playback.audible`. When the audio is
-> playing at volume, the region emits an empty string and stays
-> silent. When the audio isn't audible, it emits the current
-> word. One voice at a time — never both.
+Because the audio recording is the primary accessibility story,
+but only when the user is actually hearing it. If they've
+paused, muted, or dropped the volume to zero, the screen reader
+becomes the only voice — and without a live region, they get no
+signal at all about where in the prose playback is.
+
+So there's one `aria-live="polite"` region that announces the
+current word, gated on `playback.audible`. When the audio is
+playing at volume, the region emits an empty string and stays
+silent. When the audio isn't audible, it emits the current
+word. One voice at a time — never both.
 
 **"`display: none` vs the visually-hidden pattern?"**
-> `display: none` and `visibility: hidden` remove from the
-> accessibility tree. The clipped/1px-box `sr-only` pattern
-> keeps content in the AT tree while hiding it visually. Use
-> the latter for screen-reader-only labels, live regions,
-> off-screen heading structure.
+`display: none` and `visibility: hidden` remove from the
+accessibility tree. The clipped/1px-box `sr-only` pattern
+keeps content in the AT tree while hiding it visually. Use
+the latter for screen-reader-only labels, live regions,
+off-screen heading structure.
 
 **"Why no `tabindex` on the passage?"**
-> The hover/click decoration on prose is a *visual affordance
-> for mouse users*. Adding `tabindex` puts a keyboard tab stop
-> on the paragraph with nothing to do once focused. Keyboard
-> users get the Space + arrow shortcuts instead, wired at the
-> window level. If the prose ever carried a real action, wrap
-> the trigger in a `<button>` or `<a>` and native focus
-> styling does the work.
+The hover/click decoration on prose is a *visual affordance
+for mouse users*. Adding `tabindex` puts a keyboard tab stop
+on the paragraph with nothing to do once focused. Keyboard
+users get the Space + arrow shortcuts instead, wired at the
+window level. If the prose ever carried a real action, wrap
+the trigger in a `<button>` or `<a>` and native focus
+styling does the work.
 
 ### System framing
 
 **"Walk me through the architecture from server to highlight."**
-> Bottom up. The server returns a JSON document: the prose plus
-> precomputed timings — where each word starts in the audio,
-> where each sentence begins and ends. The page loads that on
-> mount and an `<audio>` element streams the recording.
->
-> The runtime is three loops. First, a `requestAnimationFrame`
-> loop reads `audio.currentTime` every frame, finds which word
-> that timestamp belongs to, writes the index into reactive
-> state. Second, the overlay reads that state — plus the hovered
-> sentence, plus the passage's bounding rect — and computes
-> `<rect>` geometry via `Range.getClientRects()` for whatever
-> needs to be painted. Third, a `ResizeObserver` writes the
-> passage's dimensions into state whenever layout shifts, and
-> the overlay re-derives on its own.
->
-> User input has two paths in. Clicks on the prose go
-> `caretPositionFromPoint` → character offset → sentence index →
-> seek. Hardware media keys go through the Media Session API to
-> the same seek functions.
->
-> Persistence is `localStorage`, written on `pagehide`, read on
-> the next mount.
->
-> Can zoom into any of those layers.
+Bottom up. The server returns a JSON document: the prose plus
+precomputed timings — where each word starts in the audio,
+where each sentence begins and ends. The page loads that on
+mount and an `<audio>` element streams the recording.
+
+The runtime is three loops. First, a `requestAnimationFrame`
+loop reads `audio.currentTime` every frame, finds which word
+that timestamp belongs to, writes the index into reactive
+state. Second, the overlay reads that state — plus the hovered
+sentence, plus the passage's bounding rect — and computes
+`<rect>` geometry via `Range.getClientRects()` for whatever
+needs to be painted. Third, a `ResizeObserver` writes the
+passage's dimensions into state whenever layout shifts, and
+the overlay re-derives on its own.
+
+User input has two paths in. Clicks on the prose go
+`caretPositionFromPoint` → character offset → sentence index →
+seek. Hardware media keys go through the Media Session API to
+the same seek functions.
+
+Persistence is `localStorage`, written on `pagehide`, read on
+the next mount.
+
+Can zoom into any of those layers.
 
 **"If you had to ship in two days, what do you cut?"**
-> The keepers are the things that make it feel like the demo: an
-> `<audio>` element with `preservesPitch`, the rAF +
-> `findLastIndex` sync loop, the `getClientRects`-into-SVG
-> highlight, click-to-seek, and the keyboard shortcuts. Take any
-> one of those away and it stops being the same product.
->
-> What I'd defer: the Media Session integration, the aria-live
-> fallback, bfcache logging, the structured telemetry, the
-> service worker. Each of those is a follow-up PR — not a
-> rearchitecture — so the cut is additive rather than painful.
->
-> Honestly, though — Media Session is maybe two hours of work and
-> it's the thing reviewers notice. If "two days" means "ship
-> Friday," I'd probably put it back in the keep set.
+The keepers are the things that make it feel like the demo: an
+`<audio>` element with `preservesPitch`, the rAF +
+`findLastIndex` sync loop, the `getClientRects`-into-SVG
+highlight, click-to-seek, and the keyboard shortcuts. Take any
+one of those away and it stops being the same product.
+
+What I'd defer: the Media Session integration, the aria-live
+fallback, bfcache logging, the structured telemetry, the
+service worker. Each of those is a follow-up PR — not a
+rearchitecture — so the cut is additive rather than painful.
+
+Honestly, though — Media Session is maybe two hours of work and
+it's the thing reviewers notice. If "two days" means "ship
+Friday," I'd probably put it back in the keep set.
 
 **"If you had a month, what's the highest-leverage thing you'd
 add?"**
-> Virtualization for long documents — a window of ±N sentences
-> rendered, recycled as the highlight advances — because it
-> unblocks novels and textbooks, the categories where the
-> accessibility need is sharpest. After that, offline (cached
-> audio + timings) and the `Selection` API for "play this
-> paragraph." Visualizers and waveform rendering look
-> impressive in demos and change the daily-use experience very
-> little.
+Virtualization for long documents — a window of ±N sentences
+rendered, recycled as the highlight advances — because it
+unblocks novels and textbooks, the categories where the
+accessibility need is sharpest. After that, offline (cached
+audio + timings) and the `Selection` API for "play this
+paragraph." Visualizers and waveform rendering look
+impressive in demos and change the daily-use experience very
+little.
 
 ---
 
