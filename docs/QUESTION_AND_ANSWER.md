@@ -158,6 +158,7 @@ const ErrorExpectedAttributeName      = (i: number)                   => new Err
 const ErrorExpectedTagTerminator = (name: string, i: number)     => new Error(`expected '>' or '/>' after <${name}> at ${i}`);
 const ErrorMismatchedClose       = (open: string, close: string) => new Error(`mismatched </${close}> for <${open}>`);
 const ErrorTrailingInput         = (i: number)                   => new Error(`trailing input at ${i}`);
+const ErrorUnterminatedSequence  = (s: string, i: number)        => new Error(`unterminated '${s}' starting at ${i}`);
 
 // ─── LEXER ────────────────────────────────────────────────────────────────
 // Owns the cursor. Everything else asks the lexer to peek / consume / read.
@@ -180,7 +181,8 @@ function lexer(src: string) {
     },
     advance_past: (s: string) => {
       const end = src.indexOf(s, i);
-      i = end < 0 ? src.length : end + s.length;
+      if (end < 0) throw ErrorUnterminatedSequence(s, i);
+      i = end + s.length;
     },
     skip_ws: () => { while (i < src.length && /\s/.test(src[i])) i++; },
     read_name: () => {
