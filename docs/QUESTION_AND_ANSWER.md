@@ -191,15 +191,21 @@ function lexer(src: string) {
 }
 type Lexer = ReturnType<typeof lexer>;
 
+// Entity tables — see XML 1.0 §4.6 "Predefined Entities".
+// Module-level constants because they're invariant and shared by the lexer
+// (decode at parse time) and the tree-walks (encode at serialize time).
+const ENTITY_DECODE: Record<string, string> =
+  { lt: "<", gt: ">", quot: '"', apos: "'", amp: "&" };
+const ENTITY_ENCODE: Record<string, string> =
+  { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" };
+
 // &amp; LAST. Otherwise "&amp;lt;" double-decodes to "<".
 function decode_entities(s: string): string {
-  const map: Record<string, string> = { lt: "<", gt: ">", quot: '"', apos: "'", amp: "&" };
-  return s.replace(/&(lt|gt|quot|apos|amp);/g, (_, e) => map[e]);
+  return s.replace(/&(lt|gt|quot|apos|amp);/g, (_, e) => ENTITY_DECODE[e]);
 }
 // & FIRST. Otherwise you escape your own escapes.
 function encode_entities(s: string): string {
-  const map: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" };
-  return s.replace(/[&<>"]/g, (c) => map[c]);
+  return s.replace(/[&<>"]/g, (c) => ENTITY_ENCODE[c]);
 }
 
 // ─── GRAMMAR ──────────────────────────────────────────────────────────────
