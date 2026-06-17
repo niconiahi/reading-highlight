@@ -169,7 +169,11 @@ function lexer(src: string) {
     eof: () => i >= src.length,
     peek: () => src[i] ?? "",
     starts_with: (s: string) => src.startsWith(s, i),
-    consume: () => src[i++],
+    consume: () => {
+      const c = src[i];
+      i++;
+      return c;
+    },
     expect: (ch: string) => {
       if (src[i] !== ch) throw ErrorExpectedChar(ch, i);
       i++;
@@ -185,7 +189,8 @@ function lexer(src: string) {
       return src.slice(start, i);
     },
     read_quoted_string: () => {
-      const quote = src[i++];
+      const quote = src[i];
+      i++;
       if (quote !== '"' && quote !== "'") throw ErrorExpectedQuote(i - 1);
       const start = i;
       while (i < src.length && src[i] !== quote) i++;
@@ -201,6 +206,20 @@ function lexer(src: string) {
   };
 }
 type Lexer = ReturnType<typeof lexer>;
+
+// SSML element names. The parser accepts any well-formed XML name, but the
+// tree-walks switch on a known subset. Naming them here removes magic strings
+// and documents what subset of SSML 1.1 this code understands.
+const SSML_ELEMENT = {
+  ROOT:      "#root",   // synthetic top node, not a real SSML tag
+  SPEAK:     "speak",
+  PARAGRAPH: "p",
+  SENTENCE:  "s",
+  BREAK:     "break",
+  PROSODY:   "prosody",
+  SAY_AS:    "say-as",
+  MARK:      "mark",
+} as const;
 
 // Entity tables — see XML 1.0 §4.6 "Predefined Entities".
 // Module-level constants because they're invariant and shared by the lexer
@@ -224,7 +243,7 @@ function encode_entities(s: string): string {
 
 export function parse_ssml(input: string): SsmlNode {
   const l = lexer(input);
-  const root: SsmlNode = { type: "element", name: "#root", attributes: {}, children: [] };
+  const root: SsmlNode = { type: "element", name: SSML_ELEMENT.ROOT, attributes: {}, children: [] };
   parse_children(l, root);
   if (!l.eof()) throw ErrorTrailingInput(l.i);
   return root;
@@ -309,7 +328,7 @@ export function serialize_ssml(node: SsmlNode): string {
       return encode_entities(node.value);
     case "element": {
       const inner = node.children.map(serialize_ssml).join("");
-      if (node.name === "#root") return inner;
+      if (node.name === SSML_ELEMENT.ROOT) return inner;
       const attributes = Object.entries(node.attributes)
         .map(([k, v]) => ` ${k}="${encode_entities(v)}"`).join("");
       if (node.children.length === 0) return `<${node.name}${attributes}/>`;
@@ -324,8 +343,8 @@ export function ssml_to_text(node: SsmlNode): string {
       return node.value;
     case "element":
       switch (node.name) {
-        case "break": return " ";
-        default:      return node.children.map(ssml_to_text).join("");
+        case SSML_ELEMENT.BREAK: return " ";
+        default:                 return node.children.map(ssml_to_text).join("");
       }
   }
 }
@@ -338,7 +357,7 @@ export function extract_sentences(node: SsmlNode): string[] {
       case "text": return;
       case "element":
         switch (n.name) {
-          case "s":
+          case SSML_ELEMENT.SENTENCE:
             out.push(ssml_to_text(n).trim());
             return; // do NOT descend — already captured
           default:
