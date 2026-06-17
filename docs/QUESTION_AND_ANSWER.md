@@ -279,31 +279,37 @@ function encode_entities(s: string): string {
 
 export function parse_ssml(input: string): SsmlNode {
   const l = lexer(input);
-  const root: SsmlNode = { type: "element", name: SSML_ELEMENT.ROOT, attributes: {}, children: [] };
-  parse_children(l, root);
+  const root: SsmlNode = {
+    type: "element",
+    name: SSML_ELEMENT.ROOT,
+    attributes: {},
+    children: parse_children(l),
+  };
   if (!l.eof()) throw ErrorTrailingInput(l.i);
   return root;
 }
 
-// Loops over child nodes until EOF or the parent's </close>.
-// The switch IS the lookahead-dispatch point: every branch type lives here.
-function parse_children(l: Lexer, parent: Extract<SsmlNode, { type: "element" }>): void {
+// Returns the collected children. Stops at EOF or at the parent's </close>
+// (which the caller will consume). Pure: no mutation of a passed-in parent.
+function parse_children(l: Lexer): SsmlNode[] {
+  const children: SsmlNode[] = [];
   while (!l.eof()) {
     switch (true) {
       case l.starts_with("<!--"):
         l.advance_past("-->");
         continue;
       case l.starts_with("</"):
-        return; // close tag — caller consumes it
+        return children; // close tag — caller consumes it
       case l.peek() === "<":
-        parent.children.push(parse_element(l));
+        children.push(parse_element(l));
         continue;
       default: {
         const text = l.read_text_run();
-        if (text) parent.children.push({ type: "text", value: text });
+        if (text) children.push({ type: "text", value: text });
       }
     }
   }
+  return children;
 }
 
 function parse_element(l: Lexer): SsmlNode {
@@ -320,16 +326,14 @@ function parse_element(l: Lexer): SsmlNode {
       return { type: "element", name, attributes, children: [] };
     case ">": {
       l.consume();
-      const node: Extract<SsmlNode, { type: "element" }> =
-        { type: "element", name, attributes, children: [] };
-      parse_children(l, node);
+      const children = parse_children(l);
       // Now expect "</name>".
       l.expect("<"); l.expect("/");
       const close = l.read_name();
       if (close !== name) throw ErrorMismatchedClose(name, close);
       l.skip_ws();
       l.expect(">");
-      return node;
+      return { type: "element", name, attributes, children };
     }
     default:
       throw ErrorExpectedTagTerminator(name, l.i);
