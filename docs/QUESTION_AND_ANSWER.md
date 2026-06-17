@@ -138,129 +138,195 @@ contain `-`. Attributes are double-quoted. Self-closing tags exist
 characters; **CDATA** (`<![CDATA[…]]>`) is an XML literal-text block
 the parser must pass through verbatim.
 
+**Three explicit layers** make the parser readable: a **LEXER** (low-level
+char-stream ops), a **GRAMMAR** (recursive-descent productions that build
+the AST), and **TREE-WALKS** (pure functions over the AST). Every branch
+is a `switch` so the dispatch points jump out:
+
 ```ts
 export type SsmlNode =
   | { type: "text"; value: string }
   | { type: "element"; name: string; attrs: Record<string, string>; children: SsmlNode[] };
 
-export function parse_ssml(input: string): SsmlNode {
+// ─── LEXER ────────────────────────────────────────────────────────────────
+// Owns the cursor. Everything else asks the lexer to peek / consume / read.
+
+function lexer(src: string) {
   let i = 0;
-  const root: SsmlNode = { type: "element", name: "#root", attrs: {}, children: [] };
-  const stack: Extract<SsmlNode, { type: "element" }>[] = [root];
-
-  const peek = () => input[i];
-  const eat = (s: string) => {
-    if (input.slice(i, i + s.length) !== s) throw new Error(`expected ${s} at ${i}`);
-    i += s.length;
-  };
-  const skip_ws = () => { while (i < input.length && /\s/.test(input[i])) i++; };
-
-  const read_name = () => {
-    const start = i;
-    while (i < input.length && /[A-Za-z0-9_\-:]/.test(input[i])) i++;
-    return input.slice(start, i);
-  };
-
-  const read_attrs = (): Record<string, string> => {
-    const attrs: Record<string, string> = {};
-    while (true) {
-      skip_ws();
-      if (peek() === "/" || peek() === ">") return attrs;
-      const name = read_name();
-      if (!name) return attrs;
-      eat("=");
-      const quote = input[i++];
-      if (quote !== '"' && quote !== "'") throw new Error("attr quote");
+  return {
+    get i() { return i; },
+    eof: () => i >= src.length,
+    peek: () => src[i] ?? "",
+    starts_with: (s: string) => src.startsWith(s, i),
+    consume: () => src[i++],
+    expect: (ch: string) => {
+      if (src[i] !== ch) throw new Error(`expected '${ch}' at ${i}`);
+      i++;
+    },
+    advance_past: (s: string) => {
+      const end = src.indexOf(s, i);
+      i = end < 0 ? src.length : end + s.length;
+    },
+    skip_ws: () => { while (i < src.length && /\s/.test(src[i])) i++; },
+    read_name: () => {
       const start = i;
-      while (i < input.length && input[i] !== quote) i++;
-      attrs[name] = decode_entities(input.slice(start, i));
+      while (i < src.length && /[A-Za-z0-9_\-:]/.test(src[i])) i++;
+      return src.slice(start, i);
+    },
+    read_quoted_string: () => {
+      const quote = src[i++];
+      if (quote !== '"' && quote !== "'") throw new Error(`attr quote at ${i - 1}`);
+      const start = i;
+      while (i < src.length && src[i] !== quote) i++;
+      const value = decode_entities(src.slice(start, i));
       i++; // closing quote
-    }
-  };
-
-  while (i < input.length) {
-    if (peek() === "<") {
-      if (input.startsWith("<!--", i)) {
-        const end = input.indexOf("-->", i + 4);
-        i = end < 0 ? input.length : end + 3;
-        continue;
-      }
-      if (input[i + 1] === "/") {
-        i += 2;
-        const name = read_name();
-        skip_ws(); eat(">");
-        const top = stack.pop();
-        if (!top || top.type !== "element" || top.name !== name) {
-          throw new Error(`mismatched </${name}>`);
-        }
-        continue;
-      }
-      i++; // consume '<'
-      const name = read_name();
-      const attrs = read_attrs();
-      skip_ws();
-      const self_closing = peek() === "/";
-      if (self_closing) i++;
-      eat(">");
-      const node: SsmlNode = { type: "element", name, attrs, children: [] };
-      stack.at(-1)!.children.push(node);
-      if (!self_closing) stack.push(node);
-    } else {
+      return value;
+    },
+    read_text_run: () => {
       const start = i;
-      while (i < input.length && input[i] !== "<") i++;
-      const text = decode_entities(input.slice(start, i));
-      if (text) {
-        stack.at(-1)!.children.push({ type: "text", value: text });
-      }
-    }
-  }
-
-  if (stack.length !== 1) throw new Error("unclosed elements");
-  return root;
+      while (i < src.length && src[i] !== "<") i++;
+      return decode_entities(src.slice(start, i));
+    },
+  };
 }
+type Lexer = ReturnType<typeof lexer>;
 
+// &amp; LAST. Otherwise "&amp;lt;" double-decodes to "<".
 function decode_entities(s: string): string {
   const map: Record<string, string> = { lt: "<", gt: ">", quot: '"', apos: "'", amp: "&" };
   return s.replace(/&(lt|gt|quot|apos|amp);/g, (_, e) => map[e]);
 }
-```
-
-Serialize back:
-
-```ts
-export function serialize_ssml(node: SsmlNode): string {
-  if (node.type === "text") return encode_entities(node.value);
-  const attrs = Object.entries(node.attrs)
-    .map(([k, v]) => ` ${k}="${encode_entities(v)}"`).join("");
-  if (node.children.length === 0) return `<${node.name}${attrs}/>`;
-  const inner = node.children.map(serialize_ssml).join("");
-  return `<${node.name}${attrs}>${inner}</${node.name}>`;
-}
-
+// & FIRST. Otherwise you escape your own escapes.
 function encode_entities(s: string): string {
   const map: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" };
   return s.replace(/[&<>"]/g, (c) => map[c]);
 }
-```
 
-Decode to plain text — strip wrappers, keep `<s>` (sentence) text,
-respect `<break>` as a space, drop `<say-as interpret-as="…">`
-formatting by emitting the raw text:
+// ─── GRAMMAR ──────────────────────────────────────────────────────────────
+// Recursive-descent productions. One function per rule. Branches via switch.
 
-```ts
+export function parse_ssml(input: string): SsmlNode {
+  const l = lexer(input);
+  const root: SsmlNode = { type: "element", name: "#root", attrs: {}, children: [] };
+  parse_children(l, root);
+  if (!l.eof()) throw new Error(`trailing input at ${l.i}`);
+  return root;
+}
+
+// Loops over child nodes until EOF or the parent's </close>.
+// The switch IS the lookahead-dispatch point: every branch type lives here.
+function parse_children(l: Lexer, parent: Extract<SsmlNode, { type: "element" }>): void {
+  while (!l.eof()) {
+    switch (true) {
+      case l.starts_with("<!--"):
+        l.advance_past("-->");
+        continue;
+      case l.starts_with("</"):
+        return; // close tag — caller consumes it
+      case l.peek() === "<":
+        parent.children.push(parse_element(l));
+        continue;
+      default: {
+        const text = l.read_text_run();
+        if (text) parent.children.push({ type: "text", value: text });
+      }
+    }
+  }
+}
+
+function parse_element(l: Lexer): SsmlNode {
+  l.expect("<");
+  const name = l.read_name();
+  const attrs = parse_attributes(l);
+  l.skip_ws();
+
+  // Switch on the terminator: "/" = self-close, ">" = open with children.
+  switch (l.peek()) {
+    case "/":
+      l.consume();
+      l.expect(">");
+      return { type: "element", name, attrs, children: [] };
+    case ">": {
+      l.consume();
+      const node: Extract<SsmlNode, { type: "element" }> =
+        { type: "element", name, attrs, children: [] };
+      parse_children(l, node);
+      // Now expect "</name>".
+      l.expect("<"); l.expect("/");
+      const close = l.read_name();
+      if (close !== name) throw new Error(`mismatched </${close}> for <${name}>`);
+      l.skip_ws();
+      l.expect(">");
+      return node;
+    }
+    default:
+      throw new Error(`expected '>' or '/>' after <${name}> at ${l.i}`);
+  }
+}
+
+function parse_attributes(l: Lexer): Record<string, string> {
+  const attrs: Record<string, string> = {};
+  while (true) {
+    l.skip_ws();
+    // Switch on first non-ws char: terminator → done, else read another attr.
+    switch (l.peek()) {
+      case "/":
+      case ">":
+        return attrs;
+      default: {
+        const name = l.read_name();
+        if (!name) return attrs;
+        l.expect("=");
+        attrs[name] = l.read_quoted_string();
+      }
+    }
+  }
+}
+
+// ─── TREE-WALKS ───────────────────────────────────────────────────────────
+// Pure functions over the AST. Switch on node.type first, then on name.
+
+export function serialize_ssml(node: SsmlNode): string {
+  switch (node.type) {
+    case "text":
+      return encode_entities(node.value);
+    case "element": {
+      const inner = node.children.map(serialize_ssml).join("");
+      if (node.name === "#root") return inner;
+      const attrs = Object.entries(node.attrs)
+        .map(([k, v]) => ` ${k}="${encode_entities(v)}"`).join("");
+      if (node.children.length === 0) return `<${node.name}${attrs}/>`;
+      return `<${node.name}${attrs}>${inner}</${node.name}>`;
+    }
+  }
+}
+
 export function ssml_to_text(node: SsmlNode): string {
-  if (node.type === "text") return node.value;
-  if (node.name === "break") return " ";
-  return node.children.map(ssml_to_text).join("");
+  switch (node.type) {
+    case "text":
+      return node.value;
+    case "element":
+      switch (node.name) {
+        case "break": return " ";
+        default:      return node.children.map(ssml_to_text).join("");
+      }
+  }
 }
 
 // "extract text solely from <s> sentence elements":
 export function extract_sentences(node: SsmlNode): string[] {
   const out: string[] = [];
-  const walk = (n: SsmlNode) => {
-    if (n.type === "element") {
-      if (n.name === "s") out.push(ssml_to_text(n).trim());
-      else n.children.forEach(walk);
+  const walk = (n: SsmlNode): void => {
+    switch (n.type) {
+      case "text": return;
+      case "element":
+        switch (n.name) {
+          case "s":
+            out.push(ssml_to_text(n).trim());
+            return; // do NOT descend — already captured
+          default:
+            n.children.forEach(walk);
+        }
     }
   };
   walk(node);
