@@ -159,6 +159,8 @@ const ErrorExpectedTagTerminator = (name: string, i: number)     => new Error(`e
 const ErrorMismatchedClose       = (open: string, close: string) => new Error(`mismatched </${close}> for <${open}>`);
 const ErrorTrailingInput         = (i: number)                   => new Error(`trailing input at ${i}`);
 const ErrorUnterminatedSequence  = (s: string, i: number)        => new Error(`unterminated '${s}' starting at ${i}`);
+const ErrorUnknownEntity         = (name: string, i: number)     => new Error(`unknown entity '&${name};' at ${i}`);
+const ErrorUnterminatedEntity    = (i: number)                   => new Error(`unterminated entity reference at ${i}`);
 
 // ─── LEXER ────────────────────────────────────────────────────────────────
 // Owns the cursor. Everything else asks the lexer to peek / consume / read.
@@ -224,20 +226,52 @@ const SSML_ELEMENT = {
 } as const;
 
 // Entity tables — see XML 1.0 §4.6 "Predefined Entities".
-// Module-level constants because they're invariant and shared by the lexer
-// (decode at parse time) and the tree-walks (encode at serialize time).
-const ENTITY_DECODE: Record<string, string> =
-  { lt: "<", gt: ">", quot: '"', apos: "'", amp: "&" };
-const ENTITY_ENCODE: Record<string, string> =
-  { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" };
+// Map (over plain object) gives explicit-not-found semantics via `.get()`,
+// avoiding accidental prototype-chain collisions. Shared by the lexer (decode
+// at parse time) and the tree-walks (encode at serialize time).
+const ENTITY_DECODE = new Map<string, string>([
+  ["lt",   "<"],
+  ["gt",   ">"],
+  ["quot", '"'],
+  ["apos", "'"],
+  ["amp",  "&"],
+]);
+const ENTITY_ENCODE = new Map<string, string>([
+  ["&", "&amp;"],
+  ["<", "&lt;"],
+  [">", "&gt;"],
+  ['"', "&quot;"],
+]);
 
-// &amp; LAST. Otherwise "&amp;lt;" double-decodes to "<".
+// Single-pass scan. O(n) instead of O(n·k) chained-replace. As a bonus, the
+// algorithm CAN'T double-process: each char is touched exactly once, so the
+// "&amp; LAST" ordering trap is structurally impossible.
 function decode_entities(s: string): string {
-  return s.replace(/&(lt|gt|quot|apos|amp);/g, (_, e) => ENTITY_DECODE[e]);
+  let out = "";
+  let i = 0;
+  while (i < s.length) {
+    if (s[i] === "&") {
+      const end = s.indexOf(";", i + 1);
+      if (end < 0) throw ErrorUnterminatedEntity(i);
+      const name = s.slice(i + 1, end);
+      const replacement = ENTITY_DECODE.get(name);
+      if (replacement === undefined) throw ErrorUnknownEntity(name, i);
+      out += replacement;
+      i = end + 1;
+      continue;
+    }
+    out += s[i];
+    i++;
+  }
+  return out;
 }
-// & FIRST. Otherwise you escape your own escapes.
+
+// Symmetric single-pass: lookup per char, fall through if not in the map.
+// No "& FIRST" trap — each input char is consumed once and replaced atomically.
 function encode_entities(s: string): string {
-  return s.replace(/[&<>"]/g, (c) => ENTITY_ENCODE[c]);
+  let out = "";
+  for (const c of s) out += ENTITY_ENCODE.get(c) ?? c;
+  return out;
 }
 
 // ─── GRAMMAR ──────────────────────────────────────────────────────────────
