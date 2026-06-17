@@ -146,7 +146,18 @@ is a `switch` so the dispatch points jump out:
 ```ts
 export type SsmlNode =
   | { type: "text"; value: string }
-  | { type: "element"; name: string; attrs: Record<string, string>; children: SsmlNode[] };
+  | { type: "element"; name: string; attributes: Record<string, string>; children: SsmlNode[] };
+
+// ─── ERRORS ───────────────────────────────────────────────────────────────
+// Centralized error factories. Every throw site in the parser goes through
+// one of these — single source of truth for message format, easy to grep,
+// easy to swap for a custom Error subclass later.
+const ErrorExpectedChar          = (ch: string, i: number)       => new Error(`expected '${ch}' at ${i}`);
+const ErrorExpectedQuote         = (i: number)                   => new Error(`expected '"' or "'" at ${i}`);
+const ErrorExpectedAttributeName      = (i: number)                   => new Error(`expected attribute name at ${i}`);
+const ErrorExpectedTagTerminator = (name: string, i: number)     => new Error(`expected '>' or '/>' after <${name}> at ${i}`);
+const ErrorMismatchedClose       = (open: string, close: string) => new Error(`mismatched </${close}> for <${open}>`);
+const ErrorTrailingInput         = (i: number)                   => new Error(`trailing input at ${i}`);
 
 // ─── LEXER ────────────────────────────────────────────────────────────────
 // Owns the cursor. Everything else asks the lexer to peek / consume / read.
@@ -160,7 +171,7 @@ function lexer(src: string) {
     starts_with: (s: string) => src.startsWith(s, i),
     consume: () => src[i++],
     expect: (ch: string) => {
-      if (src[i] !== ch) throw new Error(`expected '${ch}' at ${i}`);
+      if (src[i] !== ch) throw ErrorExpectedChar(ch, i);
       i++;
     },
     advance_past: (s: string) => {
@@ -175,7 +186,7 @@ function lexer(src: string) {
     },
     read_quoted_string: () => {
       const quote = src[i++];
-      if (quote !== '"' && quote !== "'") throw new Error(`attr quote at ${i - 1}`);
+      if (quote !== '"' && quote !== "'") throw ErrorExpectedQuote(i - 1);
       const start = i;
       while (i < src.length && src[i] !== quote) i++;
       const value = decode_entities(src.slice(start, i));
@@ -213,9 +224,9 @@ function encode_entities(s: string): string {
 
 export function parse_ssml(input: string): SsmlNode {
   const l = lexer(input);
-  const root: SsmlNode = { type: "element", name: "#root", attrs: {}, children: [] };
+  const root: SsmlNode = { type: "element", name: "#root", attributes: {}, children: [] };
   parse_children(l, root);
-  if (!l.eof()) throw new Error(`trailing input at ${l.i}`);
+  if (!l.eof()) throw ErrorTrailingInput(l.i);
   return root;
 }
 
@@ -243,7 +254,7 @@ function parse_children(l: Lexer, parent: Extract<SsmlNode, { type: "element" }>
 function parse_element(l: Lexer): SsmlNode {
   l.expect("<");
   const name = l.read_name();
-  const attrs = parse_attributes(l);
+  const attributes = parse_attributes(l);
   l.skip_ws();
 
   // Switch on the terminator: "/" = self-close, ">" = open with children.
@@ -251,39 +262,39 @@ function parse_element(l: Lexer): SsmlNode {
     case "/":
       l.consume();
       l.expect(">");
-      return { type: "element", name, attrs, children: [] };
+      return { type: "element", name, attributes, children: [] };
     case ">": {
       l.consume();
       const node: Extract<SsmlNode, { type: "element" }> =
-        { type: "element", name, attrs, children: [] };
+        { type: "element", name, attributes, children: [] };
       parse_children(l, node);
       // Now expect "</name>".
       l.expect("<"); l.expect("/");
       const close = l.read_name();
-      if (close !== name) throw new Error(`mismatched </${close}> for <${name}>`);
+      if (close !== name) throw ErrorMismatchedClose(name, close);
       l.skip_ws();
       l.expect(">");
       return node;
     }
     default:
-      throw new Error(`expected '>' or '/>' after <${name}> at ${l.i}`);
+      throw ErrorExpectedTagTerminator(name, l.i);
   }
 }
 
 function parse_attributes(l: Lexer): Record<string, string> {
-  const attrs: Record<string, string> = {};
+  const attributes: Record<string, string> = {};
   while (true) {
     l.skip_ws();
-    // Switch on first non-ws char: terminator → done, else read another attr.
+    // Switch on first non-ws char: terminator → done, else read another attribute.
     switch (l.peek()) {
       case "/":
       case ">":
-        return attrs;
+        return attributes;
       default: {
         const name = l.read_name();
-        if (!name) return attrs;
+        if (!name) throw ErrorExpectedAttributeName(l.i);
         l.expect("=");
-        attrs[name] = l.read_quoted_string();
+        attributes[name] = l.read_quoted_string();
       }
     }
   }
@@ -299,10 +310,10 @@ export function serialize_ssml(node: SsmlNode): string {
     case "element": {
       const inner = node.children.map(serialize_ssml).join("");
       if (node.name === "#root") return inner;
-      const attrs = Object.entries(node.attrs)
+      const attributes = Object.entries(node.attributes)
         .map(([k, v]) => ` ${k}="${encode_entities(v)}"`).join("");
-      if (node.children.length === 0) return `<${node.name}${attrs}/>`;
-      return `<${node.name}${attrs}>${inner}</${node.name}>`;
+      if (node.children.length === 0) return `<${node.name}${attributes}/>`;
+      return `<${node.name}${attributes}>${inner}</${node.name}>`;
     }
   }
 }
