@@ -681,22 +681,22 @@ export function find_readable_roots(root: HTMLElement = document.body): HTMLElem
 
   // 3. final weighting + filters, sort. Repeated `get_inner_text` calls
   //    are cheap because `text_cache` memoizes them per element.
-  const ranked: { el: HTMLElement; score: number }[] = [];
-  for (const [el, raw] of scores) {
-    if (get_inner_text(el).length < DEFAULT_CHAR_THRESHOLD) continue;
-    const ld = get_link_density(el);
-    if (ld > 0.5) continue;
-    const score = raw * (1 - ld);
-    if (score > 0) ranked.push({ el, score });
+  const ranked: { element: HTMLElement; weighted_score: number }[] = [];
+  for (const [element, score] of scores) {
+    if (get_inner_text(element).length < DEFAULT_CHAR_THRESHOLD) continue;
+    const link_density = get_link_density(element);
+    if (link_density > 0.5) continue;
+    const weighted_score = score * (1 - link_density);
+    if (weighted_score > 0) ranked.push({ element, weighted_score });
   }
-  ranked.sort((a, b) => b.score - a.score);
+  ranked.sort((a, b) => b.weighted_score - a.weighted_score);
 
   // 4. collapse ancestor/descendant duplicates, cap at N.
   //    `Node.contains` returns true for self, so identity check is redundant.
   const picked: HTMLElement[] = [];
-  for (const { el } of ranked) {
-    if (picked.some((kept) => kept.contains(el) || el.contains(kept))) continue;
-    picked.push(el);
+  for (const { element } of ranked) {
+    if (picked.some((kept) => kept.contains(element) || element.contains(kept))) continue;
+    picked.push(element);
     if (picked.length >= DEFAULT_N_TOP_CANDIDATES) break;
   }
   return picked;
