@@ -664,18 +664,18 @@ export function find_readable_roots(root: HTMLElement = document.body): HTMLElem
 
   // 2. score each, propagate up to ancestors with a level divider
   const stop = root.parentElement;
-  for (const p of paragraphs) {
-    const text = get_inner_text(p);
+  for (const paragraph of paragraphs) {
+    const text = get_inner_text(paragraph);
     if (text.length < MIN_TEXT_TO_SCORE) continue;
     const content_score = 1 + count_commas(text) + Math.min(Math.floor(text.length / 100), 3);
     let level = 0;
-    for (let a = p.parentElement; a && a !== stop; a = a.parentElement) {
-      if (!candidates.has(a)) {
-        scores.set(a, (TAG_BASE.get(a.tagName) ?? 0) + get_class_weight(a));
-        candidates.add(a);
+    for (let ancestor = paragraph.parentElement; ancestor && ancestor !== stop; ancestor = ancestor.parentElement) {
+      if (!candidates.has(ancestor)) {
+        scores.set(ancestor, (TAG_BASE.get(ancestor.tagName) ?? 0) + get_class_weight(ancestor));
+        candidates.add(ancestor);
       }
       const divider = level === 0 ? 1 : level === 1 ? 2 : level * 3;
-      scores.set(a, scores.get(a)! + content_score / divider);
+      scores.set(ancestor, scores.get(ancestor)! + content_score / divider);
       level++;
     }
   }
@@ -696,7 +696,7 @@ export function find_readable_roots(root: HTMLElement = document.body): HTMLElem
   //    `Node.contains` returns true for self, so identity check is redundant.
   const picked: HTMLElement[] = [];
   for (const { el } of ranked) {
-    if (picked.some((p) => p.contains(el) || el.contains(p))) continue;
+    if (picked.some((kept) => kept.contains(el) || el.contains(kept))) continue;
     picked.push(el);
     if (picked.length >= DEFAULT_N_TOP_CANDIDATES) break;
   }
@@ -708,8 +708,8 @@ export function find_readable_roots(root: HTMLElement = document.body): HTMLElem
 // skip mounting the TTS button on dashboards / banking apps.
 export function is_probably_readerable(root: HTMLElement = document.body): boolean {
   let score = 0;
-  for (const p of root.querySelectorAll<HTMLElement>("p, pre, article")) {
-    const text = get_inner_text(p);
+  for (const paragraph of root.querySelectorAll<HTMLElement>("p, pre, article")) {
+    const text = get_inner_text(paragraph);
     if (text.length < DEFAULT_CHAR_THRESHOLD) continue;
     score += Math.sqrt(text.length - DEFAULT_CHAR_THRESHOLD);
     if (score > READERABLE_MIN_SCORE) return true;
