@@ -690,7 +690,9 @@ export function find_readable_roots(root: HTMLElement = document.body): HTMLElem
     if (get_inner_text(el).length < DEFAULT_CHAR_THRESHOLD) continue;
     const ld = get_link_density(el);
     if (ld > 0.5) continue;
-    const score = scores.get(el)! * (1 - ld);
+    const raw = scores.get(el);
+    if (raw === undefined) continue;
+    const score = raw * (1 - ld);
     if (score > 0) ranked.push({ el, score });
   }
   ranked.sort((a, b) => b.score - a.score);
