@@ -670,12 +670,15 @@ export function find_readable_roots(root: HTMLElement = document.body): HTMLElem
     const content_score = 1 + count_commas(text) + Math.min(Math.floor(text.length / 100), 3);
     let level = 0;
     for (let ancestor = paragraph.parentElement; ancestor && ancestor !== stop; ancestor = ancestor.parentElement) {
-      if (!candidates.has(ancestor)) {
-        scores.set(ancestor, (TAG_BASE.get(ancestor.tagName) ?? 0) + get_class_weight(ancestor));
-        candidates.add(ancestor);
-      }
       const divider = level === 0 ? 1 : level === 1 ? 2 : level * 3;
-      scores.set(ancestor, scores.get(ancestor)! + content_score / divider);
+      const score = scores.get(ancestor);
+      if (score === undefined) {
+        candidates.add(ancestor);
+        const base = (TAG_BASE.get(ancestor.tagName) ?? 0) + get_class_weight(ancestor);
+        scores.set(ancestor, base + content_score / divider);
+      } else {
+        scores.set(ancestor, score + content_score / divider);
+      }
       level++;
     }
   }
