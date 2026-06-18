@@ -652,18 +652,13 @@ function count_commas(s: string): number {
   return n;
 }
 
-export function find_readable_roots(root: HTMLElement = document.body): HTMLElement[] {
-  // Map presence IS candidate membership — one structure, one invariant.
-  // Insertion order is preserved, so step 3 iterates deterministically.
+// Step 2: walk paragraphs, propagate score up to ancestors with decay.
+// Pure function of `root` → ancestor-score map. Easy to test in isolation:
+// build a fixture, assert which ancestor accumulated the highest total.
+export function score_ancestors(root: HTMLElement = document.body): Map<HTMLElement, number> {
   const scores = new Map<HTMLElement, number>();
-
-  // 1. collect paragraph-like nodes worth scoring — let the browser do the
-  //    tag filter natively instead of TreeWalker + Set.has in JS.
-  const paragraphs = root.querySelectorAll<HTMLElement>("p, pre, td");
-
-  // 2. score each, propagate up to ancestors with a level divider
   const stop = root.parentElement;
-  for (const paragraph of paragraphs) {
+  for (const paragraph of root.querySelectorAll<HTMLElement>("p, pre, td")) {
     const text = get_inner_text(paragraph);
     if (text.length < MIN_TEXT_TO_SCORE) continue;
     const content_score = 1 + count_commas(text) + Math.min(Math.floor(text.length / TEXT_BUCKET_SIZE), MAX_LENGTH_BONUS);
@@ -680,9 +675,14 @@ export function find_readable_roots(root: HTMLElement = document.body): HTMLElem
       level++;
     }
   }
+  return scores;
+}
 
-  // 3. final weighting + filters, sort. Repeated `get_inner_text` calls
-  //    are cheap because `text_cache` memoizes them per element.
+// Step 3: drop candidates that are too short or too link-dense, weight the
+// rest by (1 - link_density), sort descending. Pure transformation: takes
+// the map from step 2, returns a ranked list. Testable by handing it a
+// hand-built Map and checking order + presence.
+export function rank_candidates(scores: Map<HTMLElement, number>): { element: HTMLElement; weighted_score: number }[] {
   const ranked: { element: HTMLElement; weighted_score: number }[] = [];
   for (const [element, score] of scores) {
     if (get_inner_text(element).length < DEFAULT_CHAR_THRESHOLD) continue;
@@ -692,9 +692,13 @@ export function find_readable_roots(root: HTMLElement = document.body): HTMLElem
     if (weighted_score > 0) ranked.push({ element, weighted_score });
   }
   ranked.sort((a, b) => b.weighted_score - a.weighted_score);
+  return ranked;
+}
 
-  // 4. collapse ancestor/descendant duplicates, cap at N.
-  //    `Node.contains` returns true for self, so identity check is redundant.
+// Step 4: collapse ancestor/descendant duplicates and cap at N. Pure on the
+// input array — no DOM mutation, no scoring. `Node.contains` returns true
+// for self, so identity check is redundant.
+export function pick_top(ranked: { element: HTMLElement; weighted_score: number }[]): HTMLElement[] {
   const picked: HTMLElement[] = [];
   for (const { element } of ranked) {
     if (picked.some((kept) => kept.contains(element) || element.contains(kept))) continue;
@@ -702,6 +706,11 @@ export function find_readable_roots(root: HTMLElement = document.body): HTMLElem
     if (picked.length >= DEFAULT_N_TOP_CANDIDATES) break;
   }
   return picked;
+}
+
+// Composer. Three functions, three responsibilities, one pipeline.
+export function find_readable_roots(root: HTMLElement = document.body): HTMLElement[] {
+  return pick_top(rank_candidates(score_ancestors(root)));
 }
 
 // Mirror of Readability's isProbablyReaderable — Firefox uses this to decide
