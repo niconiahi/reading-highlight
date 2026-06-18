@@ -585,6 +585,176 @@ Probes:
   shadow roots (`mode: "closed"` hides `shadowRoot` from outside JS)
   and you can't reach in.
 
+#### 4.2.1 Readability-faithful variant — what to reach for if probed
+
+The §4.2 implementation is the whiteboardable simplification. If the
+interviewer probes "how does Mozilla Readability actually do this?",
+upgrade to the real `_grabArticle` shape: **don't score block
+containers directly — score `<p>`-like nodes and propagate the score
+up the ancestor chain**, then weight every candidate by
+`(1 - linkDensity)` at the end. This is structurally what `Readability.js`
+does in `_grabArticle` / `_initializeNode` / `_getClassWeight` /
+`_getLinkDensity`. Mirroring those names in the answer is a low-cost
+signal that you've read the library.
+
+```ts
+const REGEXPS = {
+  positive: /article|content|main|body|entry|post|story/i,
+  negative: /comment|sidebar|footer|header|nav|menu|ad-|promo|share|social/i,
+};
+const DEFAULT_TAGS_TO_SCORE = new Set(["P", "PRE", "TD"]);
+const DEFAULT_N_TOP_CANDIDATES = 5;
+const DEFAULT_CHAR_THRESHOLD = 140;
+const MIN_TEXT_TO_SCORE = 25;
+
+type Scored = HTMLElement & { _readability?: { score: number } };
+
+function _getInnerText(el: Element): string {
+  return (el.textContent ?? "").trim().replace(/\s+/g, " ");
+}
+function _getLinkDensity(el: Element): number {
+  const text_len = _getInnerText(el).length;
+  if (!text_len) return 0;
+  let link_len = 0;
+  for (const a of el.querySelectorAll("a")) link_len += _getInnerText(a).length;
+  return link_len / text_len;
+}
+function _getClassWeight(el: Element): number {
+  let w = 0;
+  const sig = `${el.className} ${el.id}`;
+  if (REGEXPS.negative.test(sig)) w -= 25;
+  if (REGEXPS.positive.test(sig)) w += 25;
+  return w;
+}
+function _initializeNode(el: Scored): void {
+  let base: number;
+  switch (el.tagName) {
+    case "ARTICLE": base = 30; break;
+    case "MAIN":    base = 20; break;
+    case "SECTION": case "DIV": base = 5; break;
+    case "BLOCKQUOTE": case "PRE": case "TD": base = 3; break;
+    case "ADDRESS": case "OL": case "UL": case "DL":
+    case "DD": case "DT": case "LI": case "FORM": base = -3; break;
+    case "H1": case "H2": case "H3":
+    case "H4": case "H5": case "H6": case "TH": base = -5; break;
+    default: base = 0;
+  }
+  el._readability = { score: base + _getClassWeight(el) };
+}
+
+export function find_readable_roots(root: HTMLElement = document.body): HTMLElement[] {
+  // 1. collect paragraph-like nodes worth scoring
+  const elements_to_score: HTMLElement[] = [];
+  const tw = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+  for (let n = tw.currentNode as HTMLElement | null; n; n = tw.nextNode() as HTMLElement | null) {
+    if (DEFAULT_TAGS_TO_SCORE.has(n.tagName) && _getInnerText(n).length >= MIN_TEXT_TO_SCORE) {
+      elements_to_score.push(n);
+    }
+  }
+  // 2. score each, propagate up to ancestors with a level divider
+  const candidates: Scored[] = [];
+  for (const p of elements_to_score) {
+    const text = _getInnerText(p);
+    let content_score = 1;
+    content_score += text.match(/,/g)?.length ?? 0;
+    content_score += Math.min(Math.floor(text.length / 100), 3);
+    let level = 0;
+    const stop = root.parentElement;
+    for (let a: HTMLElement | null = p.parentElement; a && a !== stop; a = a.parentElement) {
+      const sa = a as Scored;
+      if (!sa._readability) { _initializeNode(sa); candidates.push(sa); }
+      const divider = level === 0 ? 1 : level === 1 ? 2 : level * 3;
+      sa._readability!.score += content_score / divider;
+      level++;
+    }
+  }
+  // 3. final weighting + filters, sort
+  const ranked = candidates
+    .map((el) => ({ el, score: el._readability!.score * (1 - _getLinkDensity(el)) }))
+    .filter(({ el, score }) =>
+      score > 0
+      && _getInnerText(el).length >= DEFAULT_CHAR_THRESHOLD
+      && _getLinkDensity(el) <= 0.5,
+    )
+    .sort((a, b) => b.score - a.score);
+  // 4. collapse ancestor/descendant duplicates, cap at N
+  const picked: HTMLElement[] = [];
+  for (const { el } of ranked) {
+    if (picked.some((p) => p === el || p.contains(el) || el.contains(p))) continue;
+    picked.push(el);
+    if (picked.length >= DEFAULT_N_TOP_CANDIDATES) break;
+  }
+  for (const c of candidates) delete c._readability;
+  return picked;
+}
+
+// Mirror of Readability's isProbablyReaderable — Firefox uses this to decide
+// whether to even show the Reader View button. Useful in the extension to
+// skip mounting the TTS button on dashboards / banking apps.
+export function is_probably_readerable(
+  root: HTMLElement = document.body,
+  { min_content_length = DEFAULT_CHAR_THRESHOLD, min_score = 20 } = {},
+): boolean {
+  let score = 0;
+  for (const p of root.querySelectorAll<HTMLElement>("p, pre, article")) {
+    const text = _getInnerText(p);
+    if (text.length < min_content_length) continue;
+    score += Math.sqrt(text.length - min_content_length);
+    if (score > min_score) return true;
+  }
+  return false;
+}
+```
+
+What's different from §4.2 and why each change is defensible:
+
+- **Score paragraphs, not containers.** The simple version scored every
+  block element by its own text. Readability scores `<p>`/`<pre>`/`<td>`
+  and walks each one's ancestor chain, adding `content_score / divider`
+  to each ancestor. Parent gets full, grandparent gets half, then
+  `level * 3`. Effect: nav and footer never become candidates because
+  they don't contain scorable paragraphs, so nothing ever lifts them
+  onto the candidate list at all. Cleaner than scoring everything and
+  rejecting after.
+- **`content_score = 1 + commas + min(len/100, 3)`.** Length is capped
+  per-paragraph so one giant `<p>` can't dominate; the signal you want
+  is "many medium paragraphs", which is exactly prose.
+- **`score *= (1 - linkDensity)` at the end.** Multiplicative, not a
+  cliff. A 0.4-link-density block keeps 60% of its score; a 0.9 block
+  keeps 10%. The simple version's `linkDensity > 0.5 → reject` is also
+  applied as a final guard.
+- **`_initializeNode` weights.** Tag-base + class-weight in one place,
+  matching `Readability.js`. Lists, list items, forms, and headings get
+  negative bases — they're prose-shaped only superficially.
+- **Element-attached score (`el._readability`).** Same trick as the
+  library — stash the running score on the node itself so the
+  ancestor-walk doesn't need a `Map`. Cleaned up at the end so we
+  don't pollute the DOM for the caller.
+- **`is_probably_readerable` companion.** Same name as Mozilla's helper,
+  same shape. Cheap pre-check the extension calls before doing any of
+  the heavy work above.
+
+What to say out loud while writing this:
+
+> "I'm modeling this after Mozilla Readability's `_grabArticle`. The
+> simplification — scoring containers directly — would also pass these
+> tests, but it has a failure mode on real pages where a sidebar
+> wrapper's combined text crosses the threshold. Scoring paragraphs and
+> propagating up is what makes that not happen. The link-density
+> multiplier at the end is the second guard. I'm exporting
+> `is_probably_readerable` separately because the extension wants a fast
+> 'is this even worth running TTS on' check before the expensive
+> per-page work."
+
+Caveats to flag, unprompted:
+
+- "I'm not crossing shadow roots or iframes in this pass — Readability
+  doesn't either, and cross-origin iframes would throw anyway."
+- "Real Readability mutates the document. I'm not — I'm returning roots
+  to read from, not rewriting the DOM into a Reader View."
+- "The constants (30/20/5, divider thresholds, 140-char floor) are
+  tuned, not derived. I'd treat them as configurable in production."
+
 ### 4.3 Click-to-read on an arbitrary page
 
 The extension's actual UX. Candidate has this in §4 of
