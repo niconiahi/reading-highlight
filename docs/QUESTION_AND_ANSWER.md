@@ -606,6 +606,8 @@ const DEFAULT_N_TOP_CANDIDATES = 5;
 const DEFAULT_CHAR_THRESHOLD = 140;
 const MIN_TEXT_TO_SCORE = 25;
 const READERABLE_MIN_SCORE = 20;
+const LENGTH_BUCKET_CHARS = 100;
+const MAX_LENGTH_BONUS = 3;
 
 // O(1) tag-base lookup. Map (over Record) keeps the "small fixed table"
 // intent explicit and lets us iterate keys later if we ever need to.
@@ -664,7 +666,7 @@ export function find_readable_roots(root: HTMLElement = document.body): HTMLElem
   for (const paragraph of paragraphs) {
     const text = get_inner_text(paragraph);
     if (text.length < MIN_TEXT_TO_SCORE) continue;
-    const content_score = 1 + count_commas(text) + Math.min(Math.floor(text.length / 100), 3);
+    const content_score = 1 + count_commas(text) + Math.min(Math.floor(text.length / LENGTH_BUCKET_CHARS), MAX_LENGTH_BONUS);
     let level = 0;
     for (let ancestor = paragraph.parentElement; ancestor && ancestor !== stop; ancestor = ancestor.parentElement) {
       const divider = level === 0 ? 1 : level === 1 ? 2 : level * 3;
