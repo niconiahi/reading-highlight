@@ -669,7 +669,7 @@ export function find_readable_roots(root: HTMLElement = document.body): HTMLElem
     if (text.length < MIN_TEXT_TO_SCORE) continue;
     const content_score = 1 + count_commas(text) + Math.min(Math.floor(text.length / 100), 3);
     let level = 0;
-    for (let a: HTMLElement | null = p.parentElement; a && a !== stop; a = a.parentElement) {
+    for (let a = p.parentElement; a && a !== stop; a = a.parentElement) {
       if (!candidates.has(a)) {
         scores.set(a, (TAG_BASE.get(a.tagName) ?? 0) + get_class_weight(a));
         candidates.add(a);
