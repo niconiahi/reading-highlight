@@ -651,12 +651,9 @@ function count_commas(s: string): number {
 }
 
 export function find_readable_roots(root: HTMLElement = document.body): HTMLElement[] {
-  // O(1) per-node score lookup, no DOM monkey-patching, no cleanup pass.
-  const scores = new WeakMap<HTMLElement, number>();
-  // Set, not array — we want O(1) "already initialized?" without ever
-  // scanning. Insertion order is preserved, so step 3 still iterates
-  // deterministically.
-  const candidates = new Set<HTMLElement>();
+  // Map presence IS candidate membership — one structure, one invariant.
+  // Insertion order is preserved, so step 3 iterates deterministically.
+  const scores = new Map<HTMLElement, number>();
 
   // 1. collect paragraph-like nodes worth scoring — let the browser do the
   //    tag filter natively instead of TreeWalker + Set.has in JS.
@@ -673,7 +670,6 @@ export function find_readable_roots(root: HTMLElement = document.body): HTMLElem
       const divider = level === 0 ? 1 : level === 1 ? 2 : level * 3;
       const score = scores.get(ancestor);
       if (score === undefined) {
-        candidates.add(ancestor);
         const base = (TAG_BASE.get(ancestor.tagName) ?? 0) + get_class_weight(ancestor);
         scores.set(ancestor, base + content_score / divider);
       } else {
@@ -686,12 +682,10 @@ export function find_readable_roots(root: HTMLElement = document.body): HTMLElem
   // 3. final weighting + filters, sort. Repeated `get_inner_text` calls
   //    are cheap because `text_cache` memoizes them per element.
   const ranked: { el: HTMLElement; score: number }[] = [];
-  for (const el of candidates) {
+  for (const [el, raw] of scores) {
     if (get_inner_text(el).length < DEFAULT_CHAR_THRESHOLD) continue;
     const ld = get_link_density(el);
     if (ld > 0.5) continue;
-    const raw = scores.get(el);
-    if (raw === undefined) continue;
     const score = raw * (1 - ld);
     if (score > 0) ranked.push({ el, score });
   }
@@ -743,14 +737,14 @@ What's different from §4.2 and why each change is defensible:
 - **`initialize_node` weights.** Tag-base + class-weight in one place,
   matching `Readability.js`. Lists, list items, forms, and headings get
   negative bases — they're prose-shaped only superficially.
-- **`WeakMap<HTMLElement, number>` for scores, `Set<HTMLElement>` for
-  candidates.** Readability.js stashes `el._readability` on the node
-  itself — that works but pollutes the DOM and needs a final cleanup
-  pass to delete the property. A `WeakMap` is the same O(1) lookup
-  with no DOM mutation and no cleanup (GC handles it when the element
-  is dropped). The candidate `Set` gives O(1) "already initialized?"
-  with deterministic insertion-order iteration in step 3, replacing the
-  array + `_readability` sentinel pattern.
+- **Single `Map<HTMLElement, number>` for scores.** Readability.js
+  stashes `el._readability` on the node itself — that works but pollutes
+  the DOM and needs a final cleanup pass. We use one `Map` where
+  presence IS candidate membership: no parallel `Set`, no "is this
+  initialized?" check duplicated across two structures. Map preserves
+  insertion order, so step 3 iterates deterministically; lifetime is
+  the function's, so a plain `Map` is honest about that (a `WeakMap`
+  would buy nothing here since the structure never escapes the call).
 - **`is_probably_readerable` companion.** Same name as Mozilla's helper,
   same shape. Cheap pre-check the extension calls before doing any of
   the heavy work above.
