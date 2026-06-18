@@ -593,8 +593,8 @@ upgrade to the real `_grabArticle` shape: **don't score block
 containers directly — score `<p>`-like nodes and propagate the score
 up the ancestor chain**, then weight every candidate by
 `(1 - linkDensity)` at the end. This is structurally what `Readability.js`
-does in `_grabArticle` / `_initializeNode` / `_getClassWeight` /
-`_getLinkDensity`. Mirroring those names in the answer is a low-cost
+does in `_grabArticle` / `initialize_node` / `get_class_weight` /
+`get_link_density`. Mirroring those names in the answer is a low-cost
 signal that you've read the library.
 
 ```ts
@@ -609,24 +609,24 @@ const MIN_TEXT_TO_SCORE = 25;
 
 type Scored = HTMLElement & { _readability?: { score: number } };
 
-function _getInnerText(el: Element): string {
+function get_inner_text(el: Element): string {
   return (el.textContent ?? "").trim().replace(/\s+/g, " ");
 }
-function _getLinkDensity(el: Element): number {
-  const text_len = _getInnerText(el).length;
+function get_link_density(el: Element): number {
+  const text_len = get_inner_text(el).length;
   if (!text_len) return 0;
   let link_len = 0;
-  for (const a of el.querySelectorAll("a")) link_len += _getInnerText(a).length;
+  for (const a of el.querySelectorAll("a")) link_len += get_inner_text(a).length;
   return link_len / text_len;
 }
-function _getClassWeight(el: Element): number {
+function get_class_weight(el: Element): number {
   let w = 0;
   const sig = `${el.className} ${el.id}`;
   if (REGEXPS.negative.test(sig)) w -= 25;
   if (REGEXPS.positive.test(sig)) w += 25;
   return w;
 }
-function _initializeNode(el: Scored): void {
+function initialize_node(el: Scored): void {
   let base: number;
   switch (el.tagName) {
     case "ARTICLE": base = 30; break;
@@ -639,7 +639,7 @@ function _initializeNode(el: Scored): void {
     case "H4": case "H5": case "H6": case "TH": base = -5; break;
     default: base = 0;
   }
-  el._readability = { score: base + _getClassWeight(el) };
+  el._readability = { score: base + get_class_weight(el) };
 }
 
 export function find_readable_roots(root: HTMLElement = document.body): HTMLElement[] {
@@ -647,14 +647,14 @@ export function find_readable_roots(root: HTMLElement = document.body): HTMLElem
   const elements_to_score: HTMLElement[] = [];
   const tw = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
   for (let n = tw.currentNode as HTMLElement | null; n; n = tw.nextNode() as HTMLElement | null) {
-    if (DEFAULT_TAGS_TO_SCORE.has(n.tagName) && _getInnerText(n).length >= MIN_TEXT_TO_SCORE) {
+    if (DEFAULT_TAGS_TO_SCORE.has(n.tagName) && get_inner_text(n).length >= MIN_TEXT_TO_SCORE) {
       elements_to_score.push(n);
     }
   }
   // 2. score each, propagate up to ancestors with a level divider
   const candidates: Scored[] = [];
   for (const p of elements_to_score) {
-    const text = _getInnerText(p);
+    const text = get_inner_text(p);
     let content_score = 1;
     content_score += text.match(/,/g)?.length ?? 0;
     content_score += Math.min(Math.floor(text.length / 100), 3);
@@ -662,7 +662,7 @@ export function find_readable_roots(root: HTMLElement = document.body): HTMLElem
     const stop = root.parentElement;
     for (let a: HTMLElement | null = p.parentElement; a && a !== stop; a = a.parentElement) {
       const sa = a as Scored;
-      if (!sa._readability) { _initializeNode(sa); candidates.push(sa); }
+      if (!sa._readability) { initialize_node(sa); candidates.push(sa); }
       const divider = level === 0 ? 1 : level === 1 ? 2 : level * 3;
       sa._readability!.score += content_score / divider;
       level++;
@@ -670,11 +670,11 @@ export function find_readable_roots(root: HTMLElement = document.body): HTMLElem
   }
   // 3. final weighting + filters, sort
   const ranked = candidates
-    .map((el) => ({ el, score: el._readability!.score * (1 - _getLinkDensity(el)) }))
+    .map((el) => ({ el, score: el._readability!.score * (1 - get_link_density(el)) }))
     .filter(({ el, score }) =>
       score > 0
-      && _getInnerText(el).length >= DEFAULT_CHAR_THRESHOLD
-      && _getLinkDensity(el) <= 0.5,
+      && get_inner_text(el).length >= DEFAULT_CHAR_THRESHOLD
+      && get_link_density(el) <= 0.5,
     )
     .sort((a, b) => b.score - a.score);
   // 4. collapse ancestor/descendant duplicates, cap at N
@@ -697,7 +697,7 @@ export function is_probably_readerable(
 ): boolean {
   let score = 0;
   for (const p of root.querySelectorAll<HTMLElement>("p, pre, article")) {
-    const text = _getInnerText(p);
+    const text = get_inner_text(p);
     if (text.length < min_content_length) continue;
     score += Math.sqrt(text.length - min_content_length);
     if (score > min_score) return true;
@@ -723,7 +723,7 @@ What's different from §4.2 and why each change is defensible:
   cliff. A 0.4-link-density block keeps 60% of its score; a 0.9 block
   keeps 10%. The simple version's `linkDensity > 0.5 → reject` is also
   applied as a final guard.
-- **`_initializeNode` weights.** Tag-base + class-weight in one place,
+- **`initialize_node` weights.** Tag-base + class-weight in one place,
   matching `Readability.js`. Lists, list items, forms, and headings get
   negative bases — they're prose-shaped only superficially.
 - **Element-attached score (`el._readability`).** Same trick as the
