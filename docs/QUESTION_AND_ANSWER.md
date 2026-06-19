@@ -651,6 +651,13 @@ function count_commas(s: string): number {
   for (let i = 0; i < s.length; i++) if (s.charCodeAt(i) === 44) n++;
   return n;
 }
+// "Do these two DOM nodes occupy the same vertical line in the tree?"
+// Borrows the set-theory / Venn vocabulary: two nodes overlap iff one is
+// inside the other (trees can't half-overlap, so the OR captures both
+// directions of nesting).
+function overlaps(a: Node, b: Node): boolean {
+  return a.contains(b) || b.contains(a);
+}
 
 export function find_readable_roots(root: HTMLElement = document.body): HTMLElement[] {
   // Map presence IS candidate membership — one structure, one invariant.
@@ -697,7 +704,7 @@ export function find_readable_roots(root: HTMLElement = document.body): HTMLElem
   //    `Node.contains` returns true for self, so identity check is redundant.
   const picked: HTMLElement[] = [];
   for (const { element } of ranked) {
-    if (picked.some((kept) => kept.contains(element) || element.contains(kept))) continue;
+    if (picked.some((kept) => overlaps(kept, element))) continue;
     picked.push(element);
     if (picked.length >= DEFAULT_N_TOP_CANDIDATES) break;
   }
@@ -802,23 +809,36 @@ Probes:
 `MutationObserver`. Probes will ask about config and perf.
 
 ```ts
+let timer: ReturnType<typeof setTimeout> | null = null;
 const obs = new MutationObserver((records) => {
-  for (const r of records) {
-    if (r.type === "childList" && r.addedNodes.length) {
-      // debounced re-scan of readable roots
-    }
-  }
+  const all_ignored = records.every((r) =>
+    [...r.addedNodes].every((n) => (n as HTMLElement).dataset?.rhInjected),
+  );
+  if (all_ignored) return;
+  if (timer) clearTimeout(timer);
+  timer = setTimeout(() => { timer = null; rescan_readable_roots(); }, 50);
 });
 obs.observe(document.body, { childList: true, subtree: true, characterData: false });
+// disposer: obs.disconnect(); if (timer) clearTimeout(timer);
 ```
 
 Probes:
 - "Why not `characterData: true`?" — fires on every typing keystroke in
   contenteditable. We don't need it for readable-root detection.
-- "How do you avoid feedback loops when you inject UI?" — wrap your
-  injection inside a `disconnect()` / `observe()` pair, or namespace
-  your inserted nodes with a data attribute and ignore them in the
-  callback.
+- "Doesn't `MutationObserver` already batch?" — yes, one callback per
+  microtask. But framework reconciliation, streaming SSR, hydration,
+  and per-image `onload` handlers spread writes across **multiple
+  ticks** → multiple callbacks during one logical "settle." Debounce
+  collapses that burst into one re-scan.
+- "Why `.every()` on the ignore check, not `.some()`?" — a mixed batch
+  (some injected, some real) still has real content → must fire. Only
+  skip when *every* added node is yours.
+- "How do you avoid feedback loops when you inject UI?" — namespace
+  your inserted nodes with a data attribute (`data-rh-injected`) and
+  filter them out, or wrap your injection in a `disconnect()` /
+  `observe()` pair.
+- "Disposer?" — must call `obs.disconnect()` **and** `clearTimeout` the
+  pending tick, otherwise a stale callback fires after unsubscribe.
 
 ### 4.5 Visibility-based prefetch / lazy work
 
