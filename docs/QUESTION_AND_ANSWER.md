@@ -809,45 +809,39 @@ Probes:
 `MutationObserver`. Probes will ask about config and perf.
 
 ```ts
-function watch(
-  target: Element,
-  on_change: () => void,
-  debounce_ms: number,
-  ignore_key: string,
-): () => void {
+function watch(target: Element, on_change: () => void, debounce_ms: number): () => void {
   let timer: ReturnType<typeof setTimeout> | null = null;
-  const obs = new MutationObserver((records) => {
-    const all_ignored = records.every((r) =>
-      [...r.addedNodes].every((n) => (n as HTMLElement).dataset?.[ignore_key]),
-    );
-    if (all_ignored) return;
+  const obs = new MutationObserver(() => {
     if (timer) clearTimeout(timer);
-    timer = setTimeout(() => { timer = null; on_change(); }, debounce_ms);
+    timer = setTimeout(on_change, debounce_ms);
   });
-  obs.observe(target, { childList: true, subtree: true, characterData: false });
+  obs.observe(target, { childList: true, subtree: true });
   return () => { obs.disconnect(); if (timer) clearTimeout(timer); };
 }
 ```
 
-Probes:
-- "Why not `characterData: true`?" — fires on every keystroke inside a
-  contenteditable. We want "new content appeared," not "user typed."
-- "Doesn't `MutationObserver` already batch?" — yes, one callback per
-  microtask. But framework reconciliation, streaming SSR, hydration,
-  and per-image `onload` handlers spread writes across **multiple
-  ticks** → multiple callbacks during one logical "settle." The
-  trailing `setTimeout` collapses that burst into one call.
-- "Why `.every()` on the ignore check, not `.some()`?" — a mixed batch
-  (some injected, some real) still has real content → must fire. Only
-  skip when *every* added node is yours.
-- "How do you avoid feedback loops when your own callback injects
-  DOM?" — tag inserted nodes with `dataset[ignore_key]` and filter
-  them out, or bracket the injection with `disconnect()` / `observe()`.
-- "Disposer?" — must call `obs.disconnect()` **and** `clearTimeout` the
-  pending tick, otherwise a stale callback fires after unsubscribe.
-- "What does `obs.takeRecords()` do?" — drains queued-but-unflushed
-  records synchronously; call it before `disconnect()` if you need to
-  process the in-flight batch instead of dropping it.
+The 90% meat:
+- **Config:** pick the narrowest set. `childList` = children added/removed,
+  `subtree` = include all descendants, `attributes` = attribute changes,
+  `characterData` = text-node content (fires on every keystroke in a
+  contenteditable, almost never what you want).
+- **Batching:** the browser already flushes records once per microtask.
+  One callback per tick, not per mutation.
+- **Debounce on top of batching:** framework reconciliation, streaming
+  SSR, hydration, and per-image `onload` handlers spread writes across
+  **multiple ticks** → multiple callbacks during one logical "settle."
+  The trailing `setTimeout` collapses that burst into one call.
+- **Disposer owns teardown:** `obs.disconnect()` **and** `clearTimeout`
+  the pending tick, otherwise a stale callback fires after unsubscribe.
+- **vs `ResizeObserver` / `IntersectionObserver`:** same shape
+  (`new X(cb)` → `observe(el, opts)` → `disconnect()`), different
+  signal — box-size and viewport intersection respectively.
+
+Edge case (only if pushed): if `on_change` itself writes DOM into the
+watched subtree, the observer sees its own writes → infinite loop. Fix
+by bracketing the write with `disconnect()` / `observe()`, or tag
+inserted nodes with a data attribute and skip records whose added
+nodes all carry it.
 
 ### 4.5 Visibility-based prefetch / lazy work
 
