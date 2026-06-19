@@ -1350,23 +1350,62 @@ the in-flight request — fire on each new keystroke so the older
 request supersedes.
 
 ```ts
-type Node = { kids: Map<string, Node>; top: string[] };
-const root: Node = { kids: new Map(), top: [] };
-function insert(word: string, all: string[]) {
-  let n = root;
-  for (const ch of word) {
-    let k = n.kids.get(ch);
-    if (!k) { k = { kids: new Map(), top: [] }; n.kids.set(ch, k); }
-    n = k; n.top = all.slice(0, 10);
+type Entry = { word: string; score: number };
+type Node = { children: Map<string, Node>; top: Entry[] };
+
+const cmp = (a: Entry, b: Entry) =>
+  b.score - a.score || a.word.localeCompare(b.word);
+
+class Autocomplete {
+  private root: Node = { children: new Map(), top: [] };
+  private maxK = 100;
+
+  insert(word: string, score: number): void {
+    let n = this.root;
+    for (const ch of word) {
+      let next = n.children.get(ch);
+      if (!next) {
+        next = { children: new Map(), top: [] };
+        n.children.set(ch, next);
+      }
+      n = next;
+      const i = n.top.findIndex((e) => e.word === word);
+      if (i >= 0) n.top[i].score = score;
+      else n.top.push({ word, score });
+      n.top.sort(cmp);
+      if (n.top.length > this.maxK) n.top.length = this.maxK;
+    }
+  }
+
+  suggest(prefix: string, limit: number): string[] {
+    let n = this.root;
+    for (const ch of prefix) {
+      const next = n.children.get(ch);
+      if (!next) return [];
+      n = next;
+    }
+    return n.top.slice(0, limit).map((e) => e.word);
   }
 }
+
+// Network layer: debounce input (Q13) + AbortController so the older
+// request supersedes when a new keystroke fires.
 let ac: AbortController | null = null;
 async function search(q: string) {
-  ac?.abort(); ac = new AbortController();
+  ac?.abort();
+  ac = new AbortController();
   const r = await fetch(`/ac?q=${q}`, { signal: ac.signal });
   return r.json();
 }
 ```
+
+Complexity:
+- `suggest`: **O(prefixLen)** — walk to the node, slice the pre-sorted array. Effectively O(1) for autocomplete-shaped prefixes. This is the hot path (every keystroke).
+- `insert`: O(wordLen × K log K) — walk each char, merge into top-K. K is small (≤100), happens at app start, amortizes over millions of reads.
+
+Why sorted array over min-heap: `suggest` needs *sorted* output. A heap saves you on insert (O(log K) per node vs O(K log K)) but still costs O(K log K) on every read to sort the heap. Sorted array does the sort once at write, slices at read. Read-heavy workload → pre-compute on write.
+
+Why dedup-by-word inside `insert`: re-inserting the same word with a new score should *update*, not duplicate. `findIndex` + in-place update + re-sort handles it in three lines.
 
 ### Q17. "Refactor this file in 30 minutes."
 Process: read tests first. Run them. Identify the smallest change
