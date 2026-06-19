@@ -1341,20 +1341,16 @@ await Promise.all(urls.map((u) => run(() => fetch(u))));
 ```
 
 ### Q16. "Design search autocomplete."
-Trie keyed on prefix; each node stores top-K results (small heap or
-sorted array). Client-side LRU+TTL cache (Q2!) keyed on the query
-string. Debounce input (Q13). On the server, prefix-search over a
-ranked index. Discuss cancellation: **`AbortController`** — built-in
-API whose `.signal` you pass into `fetch`; calling `.abort()` cancels
-the in-flight request — fire on each new keystroke so the older
-request supersedes.
+Trie keyed on prefix; each node stores a pre-sorted top-K list. Walk
+the prefix in O(prefixLen), slice the cached list — `suggest` is
+effectively O(1) for autocomplete-shaped queries. On the network
+layer, debounce keystrokes and use **`AbortController`** (built-in API
+whose `.signal` you pass to `fetch`; calling `.abort()` cancels the
+in-flight request) so each new keystroke supersedes the older request.
 
 ```ts
 type Entry = { word: string; score: number };
 type Node = { children: Map<string, Node>; top: Entry[] };
-
-const cmp = (a: Entry, b: Entry) =>
-  b.score - a.score || a.word.localeCompare(b.word);
 
 class Autocomplete {
   private root: Node = { children: new Map(), top: [] };
@@ -1372,7 +1368,7 @@ class Autocomplete {
       const i = n.top.findIndex((e) => e.word === word);
       if (i >= 0) n.top[i].score = score;
       else n.top.push({ word, score });
-      n.top.sort(cmp);
+      n.top.sort((a, b) => b.score - a.score || a.word.localeCompare(b.word));
       if (n.top.length > this.maxK) n.top.length = this.maxK;
     }
   }
@@ -1388,8 +1384,8 @@ class Autocomplete {
   }
 }
 
-// Network layer: debounce input (Q13) + AbortController so the older
-// request supersedes when a new keystroke fires.
+// Network layer: AbortController so the older request supersedes
+// when a new keystroke fires.
 let ac: AbortController | null = null;
 async function search(q: string) {
   ac?.abort();
