@@ -1298,6 +1298,26 @@ function debounce<F extends (...a: any[]) => void>(fn: F, ms: number) {
 Probe: trailing-edge vs leading-edge. The above is trailing. Leading:
 fire immediately if `t === null`, then debounce subsequent calls.
 
+### Q13b. "Implement throttle."
+The sibling of debounce: cap the rate instead of waiting for silence.
+Leading edge — fire immediately, drop calls inside the window, reopen
+after `ms`. Continuous calls → one call per `ms`.
+```ts
+function throttle<F extends (...a: any[]) => void>(fn: F, ms: number) {
+  let blocked = false;
+  return (...args: Parameters<F>) => {
+    if (blocked) return;
+    fn(...args);
+    blocked = true;
+    setTimeout(() => { blocked = false; }, ms);
+  };
+}
+```
+Probe: throttle vs debounce — throttle fires *during* the burst
+(`mousemove`, scroll, `timeupdate`), debounce fires once *after* it
+(search-on-type, autosave). Trailing-edge upgrade: also fire the last
+dropped call after the window. The exercise's `12_throttle` is leading-only.
+
 ### Q14. "Binary search the active word."
 Candidate's §2 of `LEARN.md`. Binary search is the O(log n) lookup in
 a sorted array — halve the range at each step. The variant here is
